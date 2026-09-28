@@ -59,6 +59,77 @@ func test_straight_path_has_no_finite_curve_limit() -> void:
 	assert_bool(is_inf(speed_limit)).is_true()
 
 
+func test_curve_approach_speed_limit_brakes_later_for_a_distant_curve() -> void:
+	var near_limit: float = VehicleControl.curve_approach_speed_limit(
+		0.2,
+		9.0,
+		10.0,
+		10.0
+	)
+	var far_limit: float = VehicleControl.curve_approach_speed_limit(
+		0.2,
+		9.0,
+		80.0,
+		10.0
+	)
+	var gentle_limit: float = VehicleControl.curve_approach_speed_limit(
+		0.05,
+		9.0,
+		10.0,
+		10.0
+	)
+
+	assert_float(near_limit).is_less(far_limit)
+	assert_float(near_limit).is_less(gentle_limit)
+	assert_float(near_limit).is_greater(
+		VehicleControl.curvature_speed_limit(0.2, 9.0)
+	)
+
+
+func test_moving_end_target_accelerates_until_ten_meter_gap() -> void:
+	var catch_up_speed: float = VehicleControl.moving_target_speed(
+		30.0,
+		25.0,
+		10.0,
+		0.5
+	)
+	var matched_speed: float = VehicleControl.moving_target_speed(
+		30.0,
+		10.0,
+		10.0,
+		0.5
+	)
+	var back_off_speed: float = VehicleControl.moving_target_speed(
+		30.0,
+		4.0,
+		10.0,
+		0.5
+	)
+	var capped_speed: float = VehicleControl.moving_target_speed(
+		30.0,
+		100.0,
+		10.0,
+		0.5,
+		45.0
+	)
+
+	assert_float(catch_up_speed).is_greater(30.0)
+	assert_float(matched_speed).is_equal_approx(30.0, 0.001)
+	assert_float(back_off_speed).is_less(30.0)
+	assert_float(back_off_speed).is_greater_equal(0.0)
+	assert_float(capped_speed).is_equal_approx(45.0, 0.001)
+
+
+func test_road_builder_turn_rate_uses_original_road_width_radius() -> void:
+	var turn_rate: float = VehicleControl.road_builder_turn_rate(
+		80.0,
+		40.0,
+		8.0
+	)
+
+	assert_float(turn_rate).is_equal_approx(80.0 / 60.0, 0.0001)
+
+
 func test_turn_rate_respects_lateral_acceleration_limit() -> void:
 	var turn_rate: float = VehicleControl.maximum_turn_rate(30.0, 4.0)
 

@@ -78,6 +78,23 @@ func test_curvature_is_recorded_when_heading_changes() -> void:
 	assert_float(max_curvature).is_greater(0.1)
 
 
+func test_curvature_profile_contains_distances_inside_requested_horizon() -> void:
+	var path = RoadPathScript.new(2.0)
+	path.reset(Vector3.ZERO, Vector3.FORWARD)
+	path.append_control_point(Vector3(0.0, 0.0, 6.0), Vector3.FORWARD)
+	path.append_control_point(Vector3(6.0, 0.0, 6.0), Vector3.RIGHT)
+
+	var profile: Array = path.get_curvature_profile_between(5.0, 11.0)
+
+	assert_bool(profile.is_empty()).is_false()
+	for point in profile:
+		assert_float(point["distance"]).is_greater_equal(5.0)
+		assert_float(point["distance"]).is_less_equal(11.0)
+	assert_float(profile.front()["distance"]).is_less_equal(
+		profile.back()["distance"]
+	)
+
+
 func test_pruning_keeps_one_sample_before_requested_distance() -> void:
 	var path = RoadPathScript.new(2.0)
 	path.reset(Vector3.ZERO, Vector3.FORWARD)

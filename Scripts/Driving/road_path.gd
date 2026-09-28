@@ -160,6 +160,25 @@ func max_curvature_between(from_distance: float, to_distance: float) -> float:
 	return maximum
 
 
+func get_curvature_profile_between(
+	from_distance: float,
+	to_distance: float
+) -> Array[Dictionary]:
+	var profile: Array[Dictionary] = []
+	if _samples.is_empty():
+		return profile
+	var lower := minf(from_distance, to_distance)
+	var upper := maxf(from_distance, to_distance)
+	for sample in _samples:
+		if sample["distance"] < lower or sample["distance"] > upper:
+			continue
+		profile.append({
+			"distance": sample["distance"],
+			"curvature": sample["curvature"],
+		})
+	return profile
+
+
 func prune_before_distance(distance: float) -> void:
 	while _samples.size() > 2 and _samples[1]["distance"] <= distance:
 		_samples.pop_front()

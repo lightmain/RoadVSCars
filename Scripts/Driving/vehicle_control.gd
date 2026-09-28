@@ -42,6 +42,48 @@ static func curvature_speed_limit(curvature: float, lateral_accel: float) -> flo
 	return sqrt(maxf(lateral_accel, 0.0) / curvature)
 
 
+static func curve_approach_speed_limit(
+	curvature: float,
+	lateral_accel: float,
+	distance_to_curve: float,
+	deceleration: float
+) -> float:
+	var curve_speed := curvature_speed_limit(curvature, lateral_accel)
+	if is_inf(curve_speed):
+		return INF
+	return sqrt(
+		curve_speed * curve_speed
+		+ 2.0 * maxf(deceleration, 0.0) * maxf(distance_to_curve, 0.0)
+	)
+
+
+static func moving_target_speed(
+	target_speed: float,
+	current_gap: float,
+	target_gap: float,
+	gap_gain: float,
+	maximum_speed: float = INF
+) -> float:
+	var gap_error := current_gap - maxf(target_gap, 0.0)
+	var requested_speed := maxf(
+		target_speed + gap_error * maxf(gap_gain, 0.0),
+		0.0
+	)
+	return minf(requested_speed, maxf(maximum_speed, 0.0))
+
+
+static func road_builder_turn_rate(
+	speed: float,
+	road_width: float,
+	rotation_smoothness: float
+) -> float:
+	var minimum_turning_radius := maxf(road_width * 0.5 * 3.0, MIN_DISTANCE)
+	return minf(
+		maxf(rotation_smoothness, 0.0),
+		maxf(speed, 0.0) / minimum_turning_radius
+	)
+
+
 static func maximum_turn_rate(speed: float, lateral_accel: float) -> float:
 	return maxf(lateral_accel, 0.0) / maxf(absf(speed), MIN_DISTANCE)
 
