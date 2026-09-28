@@ -60,7 +60,7 @@ func _input(event: InputEvent) -> void:
 		
 		# 将归一化位置映射到旋转角度范围
 		# 偏航 (左右转动)：屏幕左侧为0°，右侧为360°
-		_target_rotation.y = normalized_x *	deg_to_rad(max_yaw_angle) # TAU = 2 * PI = 360°
+		_target_rotation.y = -normalized_x *	deg_to_rad(max_yaw_angle) # TAU = 2 * PI = 360°
 		
 		# 俯仰 (上下转动)：屏幕顶部为-90°，底部为+90°
 		_target_rotation.x = lerp(

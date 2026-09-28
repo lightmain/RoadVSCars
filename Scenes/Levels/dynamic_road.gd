@@ -3,6 +3,9 @@ extends Node3D
 class_name DynamicRoad
 
 const RoadPathScript = preload("res://Scripts/Driving/road_path.gd")
+const ROAD_COLOR := Color.WHITE
+const MARKER_COLOR := Color.BLACK
+const MARKER_INTERVAL: float = 10.0
 
 @export var camera: RoadBuilderCamera
 @export var road_material: Material           # 道路材质
@@ -48,6 +51,7 @@ func _ready() -> void:
 		"pitch": last_pitch,
 		"index": segment_counter,
 		"path_distance": road_path.get_end_distance(),
+		"road_distance": 0.0,
 	})
 
 func _process(_delta: float) -> void:
@@ -125,6 +129,13 @@ func _get_camera_pitch() -> float:
 
 # 创建路段（使用StaticBody3D作为父节点）
 func _create_road_segment(sposition: Vector3, sbasis: Basis, pitch: float) -> void:
+	var previous_segment: Dictionary = segments[-1]
+	var segment_start_distance: float = previous_segment["road_distance"]
+	var previous_position: Vector3 = previous_segment["position"]
+	var segment_end_distance := (
+		segment_start_distance + previous_position.distance_to(sposition)
+	)
+
 	# 创建StaticBody3D作为路段容器
 	var road_segment = StaticBody3D.new()
 	road_segment.name = "RoadSegment_%d" % segment_counter
@@ -137,7 +148,13 @@ func _create_road_segment(sposition: Vector3, sbasis: Basis, pitch: float) -> vo
 	# 创建网格实例
 	var mesh_instance = MeshInstance3D.new()
 	mesh_instance.name = "RoadMesh"
-	_create_segment_mesh(mesh_instance, sposition, sbasis)
+	_create_segment_mesh(
+		mesh_instance,
+		sposition,
+		sbasis,
+		segment_start_distance,
+		segment_end_distance
+	)
 	
 	# 创建碰撞体
 	var collision_shape = CollisionShape3D.new()
@@ -157,6 +174,7 @@ func _create_road_segment(sposition: Vector3, sbasis: Basis, pitch: float) -> vo
 		"pitch": pitch,
 		"index": segment_counter,
 		"path_distance": road_path.get_end_distance(),
+		"road_distance": segment_end_distance,
 	})
 		
 	# 更新第一段标志
@@ -218,12 +236,14 @@ func _create_collision_shape(collision_shape: CollisionShape3D, sposition: Vecto
 	convex_shape.points = vertices
 	collision_shape.shape = convex_shape
 	
-# 在类变量中添加
-var color_hue: float = 0.0
-const COLOR_CYCLE_SPEED: float = 0.005  # 色相变化速度
 # 创建路段网格（顶部平面）
-# 创建路段网格（带HSV颜色循环）
-func _create_segment_mesh(mesh_instance: MeshInstance3D, sposition: Vector3, sbasis: Basis) -> void:
+func _create_segment_mesh(
+	mesh_instance: MeshInstance3D,
+	sposition: Vector3,
+	sbasis: Basis,
+	start_distance: float,
+	end_distance: float
+) -> void:
 	var mesh = ArrayMesh.new()
 	var surface_tool = SurfaceTool.new()
 	
@@ -231,11 +251,11 @@ func _create_segment_mesh(mesh_instance: MeshInstance3D, sposition: Vector3, sba
 	
 	# 创建动态材质实例
 	var dynamic_material = road_material.duplicate() if road_material else StandardMaterial3D.new()
-	
-	# 更新色相（HSV循环）
-	color_hue = fmod(color_hue + COLOR_CYCLE_SPEED, 1.0)
-	var segment_color = Color.from_hsv(color_hue, 0.5, 0.8)
-	dynamic_material.albedo_color = segment_color
+	var start_marker := floori(start_distance / MARKER_INTERVAL)
+	var end_marker := floori(end_distance / MARKER_INTERVAL)
+	dynamic_material.albedo_color = (
+		MARKER_COLOR if end_marker > start_marker else ROAD_COLOR
+	)
 	
 	# 设置材质
 	surface_tool.set_material(dynamic_material)
@@ -310,12 +330,21 @@ func _update_target_position() -> void:
 # 调试功能：可视化所有路段
 func debug_visualize_road() -> void:
 	for i in range(segments.size()):
-		var segment = segments[i]["instance"]
-		var material = segment.get_surface_override_material(0)
+		var segment: StaticBody3D = segments[i]["instance"]
+		if not is_instance_valid(segment):
+			continue
+		var mesh_instance := segment.get_node("RoadMesh") as MeshInstance3D
+		var material := mesh_instance.mesh.surface_get_material(0)
 		if material is StandardMaterial3D:
-			# 根据位置设置不同颜色
-			var hue = float(i) / segments.size()
-			material.albedo_color = Color.from_hsv(hue, 0.8, 0.8)
+			var end_distance: float = segments[i]["road_distance"]
+			var start_distance: float = (
+				segments[i - 1]["road_distance"] if i > 0 else 0.0
+			)
+			var crosses_marker := (
+				floori(end_distance / MARKER_INTERVAL)
+				> floori(start_distance / MARKER_INTERVAL)
+			)
+			material.albedo_color = MARKER_COLOR if crosses_marker else ROAD_COLOR
 
 func get_road_path() -> RefCounted:
 	return road_path

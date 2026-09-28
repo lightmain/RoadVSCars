@@ -59,6 +59,7 @@ road_width = 40.0
 
 [node name="BasicVehicle" parent="Entities" unique_id=1891487118 node_paths=PackedStringArray("dynamic_road") instance=ExtResource("2_u8q20")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.359967, 0)
+third_camera_available = false
 dynamic_road = NodePath("../../Environment/DynamicRoad")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=440029993 node_paths=PackedStringArray("dynamic_road")]
@@ -66,9 +67,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 25)
 fov = 65.5775
 script = ExtResource("3_yjxcc")
 dynamic_road = NodePath("../Environment/DynamicRoad")
-enabled = false
 backward_speed_start = 20.0
-backward_acceleration = 0.8
 max_pitch_angle = 40.0
 min_pitch_angle = -25.0
 max_yaw_angle = 180.0
