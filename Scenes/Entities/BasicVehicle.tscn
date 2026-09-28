@@ -15,7 +15,12 @@ size = Vector3(1.6, 0.5, 4)
 size = Vector3(1, 1, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_na80p"]
+custom_solver_bias = 0.044
+margin = 0.32
 size = Vector3(1.6, 0.5, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4q20n"]
+size = Vector3(1, 1, 2)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_xk30x"]
 height = 0.3
@@ -41,21 +46,23 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 mesh = SubResource("BoxMesh_rqri4")
 
 [node name="CarBodyMesh2" type="MeshInstance3D" parent="." unique_id=331879388]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.974691, -0.661374)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.974691, -0.35884356)
 mesh = SubResource("BoxMesh_is4fs")
 
 [node name="CarBodyCollision" type="CollisionShape3D" parent="." unique_id=406821436]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("BoxShape3D_na80p")
 
+[node name="CarBodyCollision2" type="CollisionShape3D" parent="." unique_id=1634924749]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.974691, -0.661374)
+shape = SubResource("BoxShape3D_4q20n")
+
 [node name="FrontLeft" type="VehicleWheel3D" parent="." unique_id=1787005378]
-transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 1, 0.236, 1.5)
+transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 1, 0.4, 1.5)
 use_as_steering = true
 wheel_friction_slip = 1.0
 suspension_travel = 0.5
 suspension_stiffness = 100.0
-damping_compression = 4.0
-damping_relaxation = 1.5
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="FrontLeft" unique_id=1033962128]
 transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
@@ -63,13 +70,11 @@ mesh = SubResource("CylinderMesh_xk30x")
 surface_material_override/0 = SubResource("StandardMaterial3D_a4t66")
 
 [node name="BackLeft" type="VehicleWheel3D" parent="." unique_id=1699752433]
-transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 1, 0.236, -1.82)
+transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 1, 0.4, -1.82)
 use_as_traction = true
 wheel_friction_slip = 1.0
 suspension_travel = 0.5
 suspension_stiffness = 100.0
-damping_compression = 2.0
-damping_relaxation = 1.5
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="BackLeft" unique_id=734604978]
 transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
@@ -77,13 +82,11 @@ mesh = SubResource("CylinderMesh_xk30x")
 surface_material_override/0 = SubResource("StandardMaterial3D_3sd4p")
 
 [node name="FrontRight" type="VehicleWheel3D" parent="." unique_id=1275880189]
-transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -1, 0.236, 1.5)
+transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -1, 0.4, 1.5)
 use_as_steering = true
 wheel_friction_slip = 1.0
 suspension_travel = 0.5
 suspension_stiffness = 100.0
-damping_compression = 4.0
-damping_relaxation = 1.5
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="FrontRight" unique_id=66437133]
 transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
@@ -91,13 +94,11 @@ mesh = SubResource("CylinderMesh_xk30x")
 surface_material_override/0 = SubResource("StandardMaterial3D_ct1tp")
 
 [node name="BackRight" type="VehicleWheel3D" parent="." unique_id=725157768]
-transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -1, 0.236, -1.82)
+transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -1, 0.4, -1.82)
 use_as_traction = true
 wheel_friction_slip = 1.0
 suspension_travel = 0.5
 suspension_stiffness = 100.0
-damping_compression = 2.0
-damping_relaxation = 1.5
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="BackRight" unique_id=1138754475]
 transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
@@ -115,6 +116,10 @@ transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 4.3
 
 [node name="ReverseCamera" type="Camera3D" parent="CameraPivot" unique_id=579384052]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.84884, 4.075)
+
+[node name="ObserverCamera" type="Camera3D" parent="." unique_id=1199869474]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 8)
+top_level = true
 
 [node name="BasicAI" type="Node" parent="." unique_id=965259551]
 script = ExtResource("4_tpm3g")

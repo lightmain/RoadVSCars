@@ -143,20 +143,56 @@ func test_travel_speed_stays_positive_after_vehicle_spins() -> void:
 	assert_float(speed).is_equal_approx(20.0, 0.001)
 
 
-func test_deceleration_uses_speed_drop_per_second() -> void:
-	var braking_deceleration: float = VehicleControl.calculate_deceleration(
-		30.0,
-		20.0,
-		0.5
-	)
-	var acceleration: float = VehicleControl.calculate_deceleration(
-		20.0,
-		30.0,
-		0.5
+func test_forward_speed_ignores_lateral_and_vertical_motion() -> void:
+	var speed: float = VehicleControl.forward_speed(
+		Vector3(12.0, -5.0, 20.0),
+		Vector3.BACK
 	)
 
-	assert_float(braking_deceleration).is_equal_approx(20.0, 0.001)
-	assert_float(acceleration).is_equal(0.0)
+	assert_float(speed).is_equal_approx(20.0, 0.001)
+
+
+func test_observer_camera_uses_fixed_world_offset() -> void:
+	var position: Vector3 = VehicleControl.observer_camera_position(
+		Vector3(10.0, 1.0, -4.0),
+		Vector3(0.0, 3.0, 8.0)
+	)
+
+	assert_vector(position).is_equal_approx(
+		Vector3(10.0, 4.0, 4.0),
+		Vector3.ONE * 0.001
+	)
+
+
+func test_windowed_deceleration_uses_full_sample_window() -> void:
+	var samples: Array[Dictionary] = [
+		{"time": 0.0, "speed": 30.0},
+		{"time": 0.05, "speed": 20.0},
+		{"time": 0.1, "speed": 29.0},
+	]
+
+	var deceleration: float = VehicleControl.windowed_deceleration(
+		samples,
+		0.1
+	)
+
+	assert_float(deceleration).is_equal_approx(10.0, 0.001)
+
+
+func test_deceleration_classification_separates_braking_and_collision() -> void:
+	var braking: StringName = VehicleControl.classify_deceleration(
+		8.0,
+		1.0,
+		2.0 * 9.80665
+	)
+	var collision: StringName = VehicleControl.classify_deceleration(
+		25.0,
+		1.0,
+		2.0 * 9.80665
+	)
+
+	assert_str(braking).is_equal("braking")
+	assert_str(collision).is_equal("collision")
 
 
 func test_positive_speed_error_only_requests_throttle() -> void:

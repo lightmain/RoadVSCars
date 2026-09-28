@@ -58,8 +58,8 @@ road_width = 40.0
 [node name="Entities" type="Node3D" parent="." unique_id=1240558796]
 
 [node name="BasicVehicle" parent="Entities" unique_id=1891487118 node_paths=PackedStringArray("dynamic_road") instance=ExtResource("2_u8q20")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.359967, 0)
-third_camera_available = false
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.486191, 0.6941154, -3.4542608)
+observer_camera_enabled = false
 dynamic_road = NodePath("../../Environment/DynamicRoad")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=440029993 node_paths=PackedStringArray("dynamic_road")]

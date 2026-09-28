@@ -16,8 +16,14 @@ const GRAVITY_ACCELERATION: float = 9.80665
 @export var third_camera_available: bool = true
 @export var manual_control: bool = false
 
+@export_group("Observer Camera")
+@export var observer_camera_enabled: bool = true
+@export var observer_camera_offset: Vector3 = Vector3(0.0, 3.0, 8.0)
+
 @export_group("Diagnostics")
 @export var log_maximum_deceleration: bool = true
+@export_range(0.05, 1.0, 0.05) var deceleration_window: float = 0.1
+@export_range(0.5, 10.0, 0.1) var collision_threshold_g: float = 2.0
 @export_range(0.1, 10.0, 0.1) var deceleration_log_interval: float = 1.0
 
 @export_group("References")
@@ -26,23 +32,61 @@ const GRAVITY_ACCELERATION: float = 9.80665
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var camera_3d: Camera3D = $CameraPivot/Camera3D
 @onready var reverse_camera: Camera3D = $CameraPivot/ReverseCamera
+@onready var observer_camera: Camera3D = $ObserverCamera
 @onready var ai: BasicAI = $BasicAI
 
 var lookat: Vector3
-var _previous_speed: float = 0.0
-var _maximum_deceleration: float = 0.0
+var _deceleration_samples: Array[Dictionary] = []
+var _telemetry_time: float = 0.0
+var _maximum_braking_deceleration: float = 0.0
+var _maximum_collision_deceleration: float = 0.0
+var _braking_peak_snapshot: Dictionary = {}
+var _collision_peak_snapshot: Dictionary = {}
 var _deceleration_log_elapsed: float = 0.0
-var _maximum_deceleration_changed: bool = false
+var _braking_peak_changed: bool = false
+var _collision_peak_changed: bool = false
 
 func _ready() -> void:
 	lookat = global_position
-	_previous_speed = VehicleControlMath.travel_speed(linear_velocity)
-	if third_camera_available:
+	_deceleration_samples.append({
+		"time": _telemetry_time,
+		"speed": VehicleControlMath.forward_speed(
+			linear_velocity,
+			global_transform.basis.z
+		),
+		"brake": 0.0,
+	})
+	if observer_camera_enabled:
+		camera_3d.current = false
+		reverse_camera.current = false
+		call_deferred("_activate_observer_camera")
+	elif third_camera_available:
 		camera_3d.current = true
 		reverse_camera.current = false
 	else:
 		camera_3d.current = false
 		reverse_camera.current = false
+
+
+func _process(_delta: float) -> void:
+	if observer_camera_enabled:
+		_update_observer_camera()
+
+
+func _activate_observer_camera() -> void:
+	if not observer_camera_enabled:
+		return
+	_update_observer_camera()
+	observer_camera.make_current()
+
+
+func _update_observer_camera() -> void:
+	observer_camera.global_position = VehicleControlMath.observer_camera_position(
+		global_position,
+		observer_camera_offset
+	)
+	_look_at_if_valid(observer_camera, global_position)
+
 
 func _physics_process(delta: float) -> void:
 	_measure_deceleration(delta)
@@ -53,38 +97,81 @@ func _physics_process(delta: float) -> void:
 
 
 func _measure_deceleration(delta: float) -> void:
-	var current_speed := VehicleControlMath.travel_speed(linear_velocity)
-	var deceleration := VehicleControlMath.calculate_deceleration(
-		_previous_speed,
-		current_speed,
-		delta
+	if delta <= 0.0:
+		return
+	_telemetry_time += delta
+	var current_speed := VehicleControlMath.forward_speed(
+		linear_velocity,
+		global_transform.basis.z
 	)
-	_previous_speed = current_speed
+	var brake_ratio := clampf(brake / maxf(BRAKE_POWER, 0.0001), 0.0, 1.0)
+	_deceleration_samples.append({
+		"time": _telemetry_time,
+		"speed": current_speed,
+		"brake": brake_ratio,
+	})
+	var cutoff := _telemetry_time - deceleration_window
+	while (
+		_deceleration_samples.size() > 2
+		and _deceleration_samples[1]["time"] <= cutoff
+	):
+		_deceleration_samples.pop_front()
 	if not log_maximum_deceleration:
 		return
 
 	_deceleration_log_elapsed += delta
-	if deceleration > _maximum_deceleration:
-		_maximum_deceleration = deceleration
-		_maximum_deceleration_changed = true
-	if (
-		_maximum_deceleration_changed
-		and _deceleration_log_elapsed >= deceleration_log_interval
-	):
-		print(
-			(
-				"[VehicleTelemetry] max_deceleration=%.2f m/s^2 (%.2f g), "
-				+ "speed=%.1f km/h, brake=%.2f"
-			)
-			% [
-				_maximum_deceleration,
-				_maximum_deceleration / GRAVITY_ACCELERATION,
-				current_speed * 3.6,
-				brake / maxf(BRAKE_POWER, 0.0001),
-			]
+	var deceleration := VehicleControlMath.windowed_deceleration(
+		_deceleration_samples,
+		deceleration_window
+	)
+	var window_brake := 0.0
+	for sample in _deceleration_samples:
+		window_brake = maxf(window_brake, sample["brake"])
+	var category := VehicleControlMath.classify_deceleration(
+		deceleration,
+		window_brake,
+		collision_threshold_g * GRAVITY_ACCELERATION
+	)
+	var snapshot := {
+		"deceleration": deceleration,
+		"speed": current_speed,
+		"brake": window_brake,
+	}
+	if category == &"braking" and deceleration > _maximum_braking_deceleration:
+		_maximum_braking_deceleration = deceleration
+		_braking_peak_snapshot = snapshot
+		_braking_peak_changed = true
+	elif category == &"collision" and deceleration > _maximum_collision_deceleration:
+		_maximum_collision_deceleration = deceleration
+		_collision_peak_snapshot = snapshot
+		_collision_peak_changed = true
+
+	if _deceleration_log_elapsed < deceleration_log_interval:
+		return
+	if _braking_peak_changed:
+		_log_deceleration_peak("braking", _braking_peak_snapshot)
+		_braking_peak_changed = false
+	if _collision_peak_changed:
+		_log_deceleration_peak("collision", _collision_peak_snapshot)
+		_collision_peak_changed = false
+	_deceleration_log_elapsed = 0.0
+
+
+func _log_deceleration_peak(category: String, snapshot: Dictionary) -> void:
+	print(
+		(
+			"[VehicleTelemetry][%s] peak=%.2f m/s^2 (%.2f g), "
+			+ "speed=%.1f km/h, brake=%.2f, window=%.2f s"
 		)
-		_deceleration_log_elapsed = 0.0
-		_maximum_deceleration_changed = false
+		% [
+			category,
+			snapshot["deceleration"],
+			snapshot["deceleration"] / GRAVITY_ACCELERATION,
+			snapshot["speed"] * 3.6,
+			snapshot["brake"],
+			deceleration_window,
+		]
+	)
 
 
 func _ai_control(delta: float) -> void:
@@ -137,7 +224,10 @@ func _basic_driving(
 	)
 	
 	# Set Camera
-	if not third_camera_available:
+	if observer_camera_enabled:
+		camera_3d.current = false
+		reverse_camera.current = false
+	elif not third_camera_available:
 		camera_3d.current = false
 		reverse_camera.current = false 
 	else:

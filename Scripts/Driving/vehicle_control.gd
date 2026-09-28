@@ -93,16 +93,53 @@ static func travel_speed(linear_velocity: Vector3) -> float:
 	return speed if is_finite(speed) else 0.0
 
 
-static func calculate_deceleration(
-	previous_speed: float,
-	current_speed: float,
-	delta: float
+static func forward_speed(
+	linear_velocity: Vector3,
+	forward_direction: Vector3
 ) -> float:
-	if delta <= MIN_DISTANCE:
+	if forward_direction.length_squared() <= MIN_DISTANCE:
 		return 0.0
+	var speed := linear_velocity.dot(forward_direction.normalized())
+	return maxf(speed, 0.0) if is_finite(speed) else 0.0
+
+
+static func observer_camera_position(
+	target_position: Vector3,
+	world_offset: Vector3
+) -> Vector3:
+	return target_position + world_offset
+
+
+static func windowed_deceleration(
+	samples: Array[Dictionary],
+	window_seconds: float
+) -> float:
+	if samples.size() < 2 or window_seconds <= MIN_DISTANCE:
+		return 0.0
+	var oldest: Dictionary = samples.front()
+	var newest: Dictionary = samples.back()
+	var elapsed: float = newest["time"] - oldest["time"]
+	if elapsed + MIN_DISTANCE < window_seconds:
+		return 0.0
+	var previous_speed: float = oldest["speed"]
+	var current_speed: float = newest["speed"]
 	if not is_finite(previous_speed) or not is_finite(current_speed):
 		return 0.0
-	return maxf((previous_speed - current_speed) / delta, 0.0)
+	return maxf((previous_speed - current_speed) / elapsed, 0.0)
+
+
+static func classify_deceleration(
+	deceleration: float,
+	brake_ratio: float,
+	collision_threshold: float
+) -> StringName:
+	if deceleration <= 0.0:
+		return &""
+	if deceleration >= maxf(collision_threshold, 0.0):
+		return &"collision"
+	if brake_ratio > 0.01:
+		return &"braking"
+	return &""
 
 
 static func stopping_speed_limit(
