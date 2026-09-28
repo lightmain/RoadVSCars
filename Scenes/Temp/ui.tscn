@@ -1,6 +1,50 @@
-[gd_scene load_steps=2 format=3 uid="uid://bjfhsju4wplt6"]
+[gd_scene load_steps=7 format=3 uid="uid://bjfhsju4wplt6"]
 
 [ext_resource type="Script" uid="uid://b1io0g5lnq3sh" path="res://Scenes/Temp/ui.gd" id="1_n5a0f"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+bg_color = Color(0.055, 0.063, 0.075, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.12)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_track"]
+bg_color = Color(0.18, 0.2, 0.24, 0.9)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_steering"]
+bg_color = Color(0.29, 0.66, 1, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_throttle"]
+bg_color = Color(0.18, 0.86, 0.47, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_brake"]
+bg_color = Color(0.93, 0.29, 0.24, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [node name="UI" type="Control"]
 layout_mode = 3
@@ -10,6 +54,100 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_n5a0f")
+
+[node name="ControlMonitor" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 276.0
+offset_bottom = 126.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ControlMonitor"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SteeringRow" type="HBoxContainer" parent="ControlMonitor/VBoxContainer"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="ControlMonitor/VBoxContainer/SteeringRow"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.93, 0.95, 1)
+text = "Steering"
+vertical_alignment = 1
+
+[node name="SteeringTrack" type="HBoxContainer" parent="ControlMonitor/VBoxContainer/SteeringRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Left" type="ProgressBar" parent="ControlMonitor/VBoxContainer/SteeringRow/SteeringTrack"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_track")
+theme_override_styles/fill = SubResource("StyleBoxFlat_steering")
+max_value = 1.0
+show_percentage = false
+fill_mode = 1
+
+[node name="Right" type="ProgressBar" parent="ControlMonitor/VBoxContainer/SteeringRow/SteeringTrack"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_track")
+theme_override_styles/fill = SubResource("StyleBoxFlat_steering")
+max_value = 1.0
+show_percentage = false
+
+[node name="ThrottleRow" type="HBoxContainer" parent="ControlMonitor/VBoxContainer"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="ControlMonitor/VBoxContainer/ThrottleRow"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.93, 0.95, 1)
+text = "Throttle"
+vertical_alignment = 1
+
+[node name="Throttle" type="ProgressBar" parent="ControlMonitor/VBoxContainer/ThrottleRow"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_track")
+theme_override_styles/fill = SubResource("StyleBoxFlat_throttle")
+max_value = 1.0
+show_percentage = false
+
+[node name="BrakeRow" type="HBoxContainer" parent="ControlMonitor/VBoxContainer"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="ControlMonitor/VBoxContainer/BrakeRow"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.93, 0.95, 1)
+text = "Brake"
+vertical_alignment = 1
+
+[node name="Brake" type="ProgressBar" parent="ControlMonitor/VBoxContainer/BrakeRow"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_track")
+theme_override_styles/fill = SubResource("StyleBoxFlat_brake")
+max_value = 1.0
+show_percentage = false
 
 [node name="SpeedMonitor" type="Control" parent="."]
 layout_mode = 1

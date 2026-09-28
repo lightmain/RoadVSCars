@@ -77,8 +77,15 @@ func _basic_driving(
 	brake = brake_value
 	
 	# Set UI
-	$UI.set_speed_monitor(linear_velocity.length() * 3.6,\
-		dynamic_road.camera.backward_speed * 3.6, throttle_command)
+	$UI.set_speed_monitor(
+		linear_velocity.length() * 3.6,
+		dynamic_road.camera.backward_speed * 3.6
+	)
+	$UI.set_control_monitor(
+		-steering / maxf(MAX_STEER, 0.0001),
+		throttle_command,
+		brake_command
+	)
 	
 	# Set Camera
 	if not third_camera_available:
