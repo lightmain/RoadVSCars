@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3 uid="uid://bjfhsju4wplt6"]
+
+[ext_resource type="Script" uid="uid://b1io0g5lnq3sh" path="res://Scenes/Temp/ui.gd" id="1_n5a0f"]
+
+[node name="UI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_n5a0f")
+
+[node name="SpeedMonitor" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -102.0
+offset_bottom = 61.0
+grow_horizontal = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="SpeedMonitor"]
+layout_mode = 0
+offset_left = -107.0
+offset_right = 111.0
+offset_bottom = 108.0
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 50
+
+[node name="Label" type="Label" parent="SpeedMonitor/MarginContainer"]
+layout_mode = 2
+text = "Speed:0"

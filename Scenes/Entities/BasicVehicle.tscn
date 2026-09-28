@@ -1,0 +1,132 @@
+[gd_scene format=3 uid="uid://cig0lyywuaagt"]
+
+[ext_resource type="Texture2D" uid="uid://b60211advn5vy" path="res://icon.svg" id="1_hvn30"]
+[ext_resource type="Script" uid="uid://c5f0rhvsr634w" path="res://Scenes/Entities/basic_vehicle.gd" id="1_uxyls"]
+[ext_resource type="PackedScene" uid="uid://bjfhsju4wplt6" path="res://Scenes/Temp/ui.tscn" id="3_sbd44"]
+[ext_resource type="Script" uid="uid://8haylajaljge" path="res://Scenes/Entities/basic_ai.gd" id="4_tpm3g"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_i43e1"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_rqri4"]
+material = SubResource("StandardMaterial3D_i43e1")
+size = Vector3(1.6, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_is4fs"]
+size = Vector3(1, 1, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_na80p"]
+size = Vector3(1.6, 0.5, 4)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_xk30x"]
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a4t66"]
+albedo_texture = ExtResource("1_hvn30")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3sd4p"]
+albedo_texture = ExtResource("1_hvn30")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ct1tp"]
+albedo_texture = ExtResource("1_hvn30")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nqye5"]
+albedo_texture = ExtResource("1_hvn30")
+
+[node name="BasicVehicle" type="VehicleBody3D" unique_id=192381905]
+mass = 60.0
+script = ExtResource("1_uxyls")
+
+[node name="CarBodyMesh" type="MeshInstance3D" parent="." unique_id=181336463]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("BoxMesh_rqri4")
+
+[node name="CarBodyMesh2" type="MeshInstance3D" parent="." unique_id=331879388]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.974691, -0.661374)
+mesh = SubResource("BoxMesh_is4fs")
+
+[node name="CarBodyCollision" type="CollisionShape3D" parent="." unique_id=406821436]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_na80p")
+
+[node name="FrontLeft" type="VehicleWheel3D" parent="." unique_id=1787005378]
+transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 1, 0.236, 1.5)
+use_as_steering = true
+wheel_roll_influence = 0.8
+wheel_friction_slip = 1.0
+suspension_travel = 0.5
+suspension_stiffness = 100.0
+damping_compression = 2.0
+damping_relaxation = 1.5
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FrontLeft" unique_id=1033962128]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_xk30x")
+surface_material_override/0 = SubResource("StandardMaterial3D_a4t66")
+
+[node name="BackLeft" type="VehicleWheel3D" parent="." unique_id=1699752433]
+transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 1, 0.236, -1.82)
+use_as_traction = true
+wheel_roll_influence = 0.8
+wheel_friction_slip = 1.0
+suspension_travel = 0.5
+suspension_stiffness = 100.0
+damping_compression = 2.0
+damping_relaxation = 1.5
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BackLeft" unique_id=734604978]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_xk30x")
+surface_material_override/0 = SubResource("StandardMaterial3D_3sd4p")
+
+[node name="FrontRight" type="VehicleWheel3D" parent="." unique_id=1275880189]
+transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -1, 0.236, 1.5)
+use_as_steering = true
+wheel_roll_influence = 0.8
+wheel_friction_slip = 1.0
+suspension_travel = 0.5
+suspension_stiffness = 100.0
+damping_compression = 2.0
+damping_relaxation = 1.5
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FrontRight" unique_id=66437133]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_xk30x")
+surface_material_override/0 = SubResource("StandardMaterial3D_ct1tp")
+
+[node name="BackRight" type="VehicleWheel3D" parent="." unique_id=725157768]
+transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -1, 0.236, -1.82)
+use_as_traction = true
+wheel_roll_influence = 0.8
+wheel_friction_slip = 1.0
+suspension_travel = 0.5
+suspension_stiffness = 100.0
+damping_compression = 2.0
+damping_relaxation = 1.5
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BackRight" unique_id=1138754475]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_xk30x")
+surface_material_override/0 = SubResource("StandardMaterial3D_nqye5")
+
+[node name="UI" parent="." unique_id=2142935007 instance=ExtResource("3_sbd44")]
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=321352729]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.432405, 0.566012)
+top_level = true
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=322812051]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 4.32278, -9.61547)
+
+[node name="ReverseCamera" type="Camera3D" parent="CameraPivot" unique_id=579384052]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.84884, 4.075)
+current = true
+
+[node name="BasicAI" type="Node" parent="." unique_id=965259551]
+script = ExtResource("4_tpm3g")
+steer_kp = 2.5
+steer_kd = 0.001
+dist_kp = 0.5
+ideal_distance = 5.0
+ideal_distance_min = 3.0
+ideal_distance_max = 150.0
+transition_width = 5.0
