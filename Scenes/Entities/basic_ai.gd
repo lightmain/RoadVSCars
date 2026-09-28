@@ -1,243 +1,155 @@
+class_name BasicAI
 extends Node
 
-class_name BasicAI
+const VehicleControlMath = preload("res://Scripts/Driving/vehicle_control.gd")
 
-@export var look_ahead_seconds: float = 2.0  # 预瞄距离
-# PID控制器参数
-@export_group("Steering")
-@export var steer_kp: float = 0.5
-@export var steer_ki: float = 0.01
-@export var steer_kd: float = 0.1
-const STEERING_INTEGRAL_LIMIT: float = 10.0
+@export_group("Path Tracking")
+@export var wheel_base: float = 3.3
+@export var minimum_lookahead: float = 7.0
+@export var maximum_lookahead: float = 24.0
+@export var lookahead_time: float = 0.65
+@export var curvature_horizon: float = 200.0
 
-@export_group("Speed")
-@export var speed_kp: float = 0.5
-@export var speed_ki: float = 0.01
-@export var speed_kd: float = 0.1
-const SPEED_INTEGRAL_LIMIT: float = 10.0
+@export_group("Speed Planning")
+@export var maximum_speed: float = 35.0
+@export var builder_speed_scale: float = 1.03
+@export var maximum_lateral_acceleration: float = 4.0
+@export var path_end_margin: float = 10.0
+@export var comfortable_deceleration: float = 10.0
 
-@export_group("Distance")
-@export var dist_kp: float = -0.5
-@export var dist_ki: float = -0.01
-@export var dist_kd: float = -0.1
-const DISTANCE_INTEGRAL_LIMIT: float = 5.0
-@export var ideal_distance = 20.0
-@export var ideal_distance_min = 12.0
-@export var ideal_distance_max = 35.0
-@export var transition_width = 2.0
+@export_group("Speed Control")
+@export var speed_kp: float = 0.12
+@export var speed_ki: float = 0.025
+@export var speed_integral_limit: float = 12.0
+@export var brake_gain: float = 1.4
+@export var speed_deadband: float = 0.25
 
-# 路径点管理
-var steering_integral_error: float = 0.0   # 积分误差
-var steering_previous_error: float = 0.0   # 上一次误差
-var speed_integral_error: float = 0.0   # 积分误差
-var speed_previous_error: float = 0.0   # 上一次误差
-var distance_integral_error: float = 0.0   # 积分误差
-var distance_previous_error: float = 0.0   # 上一次误差
-
-# 车辆和路径管理器引用
 @onready var vehicle: BasicVehicle = get_parent()
-#@onready var navigation_points = vehicle.navigation_points
+
+var _path_distance: float = 0.0
+var _path_index: int = 0
+var _speed_integral: float = 0.0
+var _previous_speed_error: float = 0.0
+
 
 func _ready() -> void:
-	# 确保车辆已连接
 	if not vehicle:
-		push_error("BasicAI: Vehicle parent not found!")
-		set_process(false)
+		push_error("BasicAI: Vehicle parent not found.")
+		set_physics_process(false)
+
+
+func get_control(delta: float) -> Dictionary:
+	var neutral := _neutral_control()
+	if not vehicle or not vehicle.dynamic_road:
+		return neutral
+
+	var path: RefCounted = vehicle.dynamic_road.get_road_path()
+	if not path or path.get_sample_count() < 2:
+		_reset_speed_controller()
+		return neutral
+
+	var projection: Dictionary = path.project(vehicle.global_position, _path_index)
+	if not projection["valid"]:
+		_reset_speed_controller()
+		return neutral
+
+	_path_distance = maxf(_path_distance, projection["distance"])
+	_path_index = maxi(_path_index, projection["segment_index"])
+
+	var travel_speed := VehicleControlMath.travel_speed(vehicle.linear_velocity)
+	var lookahead := clampf(
+		minimum_lookahead + travel_speed * lookahead_time,
+		minimum_lookahead,
+		maximum_lookahead
+	)
+	var target: Dictionary = path.sample_at_distance(_path_distance + lookahead)
+	if not target["valid"]:
+		_reset_speed_controller()
+		return neutral
+
+	var local_target := vehicle.to_local(target["position"])
+	var steering := VehicleControlMath.pure_pursuit_steering(
+		local_target,
+		wheel_base,
+		vehicle.MAX_STEER
+	)
+	steering = VehicleControlMath.limit_steering_for_speed(
+		steering,
+		travel_speed,
+		wheel_base,
+		vehicle.MAX_STEER,
+		maximum_lateral_acceleration
+	)
+	var target_speed := _calculate_target_speed(path)
+	var speed_error := target_speed - travel_speed
+	_update_speed_integral(speed_error, delta)
+	var longitudinal := VehicleControlMath.split_speed_control(
+		speed_error,
+		_speed_integral,
+		speed_kp,
+		speed_ki,
+		brake_gain
+	)
+
+	return {
+		"throttle": longitudinal["throttle"],
+		"brake": longitudinal["brake"],
+		"steering": steering,
+		"target_speed": target_speed,
+		"path_distance": _path_distance,
+	}
+
+
+func _calculate_target_speed(path: RefCounted) -> float:
+	var horizon_end := _path_distance + curvature_horizon
+	var upcoming_curvature: float = path.max_curvature_between(
+		_path_distance,
+		horizon_end
+	)
+	var curve_limit := VehicleControlMath.curvature_speed_limit(
+		upcoming_curvature,
+		maximum_lateral_acceleration
+	)
+	var remaining_distance: float = maxf(path.get_end_distance() - _path_distance, 0.0)
+	var end_limit := VehicleControlMath.stopping_speed_limit(
+		remaining_distance,
+		path_end_margin,
+		comfortable_deceleration
+	)
+	var builder_limit := vehicle.get_target_speed() * builder_speed_scale
+	var target_speed := minf(maximum_speed, builder_limit)
+	target_speed = minf(target_speed, curve_limit)
+	target_speed = minf(target_speed, end_limit)
+	return maxf(target_speed, 0.0)
+
+
+func _update_speed_integral(speed_error: float, delta: float) -> void:
+	if delta <= 0.0 or not is_finite(speed_error):
 		return
-
-#### 油门控制 ####
-#################
-# 获取油门指令 (0.0 到 1.0)
-func get_throttle(delta: float) -> float:
-	var target_point = _get_target_point()
-	var dot_res = vehicle.basis.z.dot(target_point - vehicle.global_position)
-	#print(target_point - vehicle.global_position)
-	if dot_res < 0: 
-		return 0.1
-	# 获取当前速度 (km/h)
-	var current_speed = vehicle.linear_velocity.length()
-	
-	# 目标速度（根据路径曲率调整）
-	var target_speed = _calculate_target_speed()
-	# 速度误差
-	var speed_lateral_error = target_speed - current_speed
-	
-	# PID控制器
-	speed_integral_error += speed_lateral_error * delta
-	speed_integral_error = \
-		clamp(speed_integral_error, -SPEED_INTEGRAL_LIMIT, SPEED_INTEGRAL_LIMIT)
-	var speed_derivative_error = \
-		(speed_lateral_error - speed_previous_error) / delta
-	speed_previous_error = speed_lateral_error
-	
-	# 计算转向指令
-	var throttle = \
-		(speed_kp * speed_lateral_error) + \
-		(speed_ki * speed_integral_error) + \
-		(speed_kd * speed_derivative_error)	
-	# 应用距离控制约束
-	throttle = _apply_distance_constraint(throttle, delta)
-	#print("raw throttle: %.2f | [elat, eint, ed]: [%.1f, %.1f, %.1f]" % \
-		#[throttle, speed_lateral_error, speed_integral_error, speed_derivative_error])
-	# 限制油门范围
-	return clamp(throttle, -1.0, 1.0)
-
-# 计算目标速度（基于路径曲率）
-# 计算目标速度（基于路径曲率和距离）
-func _calculate_target_speed() -> float:
-	if vehicle.navigation_points.size() == 0:
-		return 0.0
-	
-	# 获取当前路径段的曲率
-	var curvature = _calculate_path_curvature()
-	
-	# 根据曲率调整速度（曲率越大，速度越低）
-	var speed_factor = 1.0 / (1.0 + curvature * 0.1)
-	
-	# 基础速度限制
-	var base_max_speed = vehicle.get_target_speed()
-	
-	# 根据到最后一个路径点的距离调整最大速度
-	var distance_adjustment = 1.0
-	if vehicle.navigation_points.size() > 1:
-		var last_point = vehicle.navigation_points.back()["position"]
-		var distance_to_last = vehicle.global_transform.origin.distance_to(last_point)
-		
-		# 距离越近，速度应该越低
-		distance_adjustment = clamp(distance_to_last / 50.0, 0.5, 1.0)
-	
-	# 最终目标速度
-	var target_speed = base_max_speed * speed_factor * distance_adjustment
-	
-	# 调试输出
-	#print("Curvature: %.2f | DistAdj: %.2f | TargetSpeed: %.2f" % [
-		#curvature, distance_adjustment, target_speed
-	#])
-	
-	return target_speed
-
-# 计算路径曲率
-func _calculate_path_curvature() -> float:
-	if vehicle.navigation_points.size() < 3:
-		return 0.0
-
-	# 使用更多点计算平均曲率
-	var total_curvature = 0.0
-	var point_count = min(5, vehicle.navigation_points.size() - 2)
-
-	for i in range(point_count):
-		var prev_point = vehicle.navigation_points[i]["position"]
-		var current_point = vehicle.navigation_points[i+1]["position"]
-		var next_point = vehicle.navigation_points[i+2]["position"]
-
-		# 计算向量
-		var vec1 = (current_point - prev_point).normalized()
-		var vec2 = (next_point - current_point).normalized()
-
-		# 计算角度变化
-		var angle = acos(vec1.dot(vec2))
-
-		# 计算曲率（角度/距离）
-		var distance = prev_point.distance_to(next_point)
-		total_curvature += abs(angle) / max(distance, 0.1)
-
-	return total_curvature / point_count
-
-# 应用距离约束
-func _apply_distance_constraint(throttle: float, delta: float) -> float:
-	# 检查是否有有效的路径点
-	if vehicle.navigation_points.size() < 1:
-		return throttle
-	
-	# 获取最后一个路径点位置
-	var last_point = vehicle.navigation_points.back()["position"]
-	
-	# 计算到最后一个路径点的距离
-	var distance_to_last = vehicle.global_position.distance_to(last_point)
-	
-	# 计算距离误差
-	var distance_lateral_error = distance_to_last - ideal_distance
-	
-	distance_integral_error += distance_lateral_error * delta
-	distance_integral_error = \
-		clamp(distance_integral_error, -DISTANCE_INTEGRAL_LIMIT, DISTANCE_INTEGRAL_LIMIT)
-	
-	var distance_derivative_error = (distance_lateral_error - distance_previous_error) / delta
-	distance_previous_error = distance_lateral_error
-	
-	# 计算距离控制输出（正值表示需要加速，负值表示需要减速）
-	var distance_output = \
-		(dist_kp * distance_lateral_error) + \
-		(dist_ki * distance_integral_error) + \
-		(dist_kd * distance_derivative_error)
-	
-	# 根据距离调整油门
-	#print("distance to last: %.2f | distance_output: %.2f | distance_lateral_error: %.3f" % \
-		#[distance_to_last, distance_output,distance_lateral_error])
-	if distance_to_last < ideal_distance_min:
-		# 太接近终点，减速
-		#print("TOO CLOSE")
-		return min(throttle, distance_output)
-	elif distance_to_last > ideal_distance_max:
-		# 离终点太远，加速
-		#print("TOO FAR")
-		return max(throttle, distance_output)
-	else:
-		# 在理想范围内，使用原始油门值
-		# 计算过渡因子（0-1之间的值）
-		var transition_factor = 0.0
-		# 接近下限的过渡区
-		if distance_to_last < ideal_distance:
-			transition_factor = 1.0 - (distance_to_last - ideal_distance_min) / (ideal_distance - ideal_distance_min)
-			#print("IDEAL CLOSER: %.2f" % transition_factor)
-			return lerp(throttle, min(throttle, distance_output), transition_factor)
-		else:
-			transition_factor = (distance_to_last - ideal_distance) / (ideal_distance_max - ideal_distance)
-			#print("IDEAL FARER: %.2f" % transition_factor)
-			return lerp(throttle, max(throttle, distance_output), transition_factor)
+	if absf(speed_error) <= speed_deadband:
+		_speed_integral = move_toward(_speed_integral, 0.0, delta)
+		_previous_speed_error = speed_error
+		return
+	if signf(speed_error) != signf(_previous_speed_error):
+		_speed_integral = 0.0
+	_speed_integral = clampf(
+		_speed_integral + speed_error * delta,
+		-speed_integral_limit,
+		speed_integral_limit
+	)
+	_previous_speed_error = speed_error
 
 
-#### 转向控制 ####
-#################
-# 获取转向指令 (-1.0 到 1.0)
-func get_steering(delta: float) -> float:
-	# 获取目标点
-	var target_point = _get_target_point()
-	
-	# 计算横向误差（车辆局部坐标系）
-	var local_target = vehicle.to_local(target_point)
-	var steering_lateral_error = atan2(-local_target.x, abs(local_target.z))  # 正值表示目标在右侧
-	if local_target.z < 0:
-		steering_lateral_error = PI if (-local_target.x > 0) else -PI
-	#print("local_target: " , target_point)
-	# PID控制器
-	steering_integral_error += steering_lateral_error * delta
-	steering_integral_error = \
-		clamp(steering_integral_error, -STEERING_INTEGRAL_LIMIT, STEERING_INTEGRAL_LIMIT)
-	var steering_derivative_error = \
-		(steering_lateral_error - steering_previous_error) / delta
-	steering_previous_error = steering_lateral_error
-	
-	# 计算转向指令
-	var steering = \
-		(steer_kp * steering_lateral_error) + \
-		(steer_ki * steering_integral_error) + \
-		(steer_kd * steering_derivative_error)
-	
-	if vehicle.is_reversing():
-		steering = -steering
-	# 限制转向范围
-	return clamp(steering, -1.0, 1.0)
-	
-# 获取目标点（预瞄点）
-func _get_target_point() -> Vector3:
-	if vehicle.navigation_points.size() == 0:
-		return vehicle.global_position
+func _reset_speed_controller() -> void:
+	_speed_integral = 0.0
+	_previous_speed_error = 0.0
 
-	for i in range(vehicle.navigation_points.size()):
-		var distance = vehicle.global_position.distance_to(vehicle.navigation_points[i]["position"])
-		#print("Lookahead distance: %.2f" % [look_ahead_seconds * vehicle.linear_velocity.length()])
-		if distance > look_ahead_seconds * vehicle.linear_velocity.length():
-			return vehicle.navigation_points[i]["position"]
-	
-	return vehicle.navigation_points.back()["position"]
+
+func _neutral_control() -> Dictionary:
+	return {
+		"throttle": 0.0,
+		"brake": 0.0,
+		"steering": 0.0,
+		"target_speed": 0.0,
+		"path_distance": _path_distance,
+	}

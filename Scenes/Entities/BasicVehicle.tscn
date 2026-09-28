@@ -51,7 +51,7 @@ shape = SubResource("BoxShape3D_na80p")
 [node name="FrontLeft" type="VehicleWheel3D" parent="." unique_id=1787005378]
 transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 1, 0.236, 1.5)
 use_as_steering = true
-wheel_roll_influence = 0.8
+wheel_roll_influence = 0.1
 wheel_friction_slip = 1.0
 suspension_travel = 0.5
 suspension_stiffness = 100.0
@@ -66,7 +66,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_a4t66")
 [node name="BackLeft" type="VehicleWheel3D" parent="." unique_id=1699752433]
 transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 1, 0.236, -1.82)
 use_as_traction = true
-wheel_roll_influence = 0.8
+wheel_roll_influence = 0.1
 wheel_friction_slip = 1.0
 suspension_travel = 0.5
 suspension_stiffness = 100.0
@@ -81,7 +81,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_3sd4p")
 [node name="FrontRight" type="VehicleWheel3D" parent="." unique_id=1275880189]
 transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -1, 0.236, 1.5)
 use_as_steering = true
-wheel_roll_influence = 0.8
+wheel_roll_influence = 0.1
 wheel_friction_slip = 1.0
 suspension_travel = 0.5
 suspension_stiffness = 100.0
@@ -96,7 +96,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_ct1tp")
 [node name="BackRight" type="VehicleWheel3D" parent="." unique_id=725157768]
 transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -1, 0.236, -1.82)
 use_as_traction = true
-wheel_roll_influence = 0.8
+wheel_roll_influence = 0.1
 wheel_friction_slip = 1.0
 suspension_travel = 0.5
 suspension_stiffness = 100.0
@@ -123,10 +123,3 @@ current = true
 
 [node name="BasicAI" type="Node" parent="." unique_id=965259551]
 script = ExtResource("4_tpm3g")
-steer_kp = 2.5
-steer_kd = 0.001
-dist_kp = 0.5
-ideal_distance = 5.0
-ideal_distance_min = 3.0
-ideal_distance_max = 150.0
-transition_width = 5.0

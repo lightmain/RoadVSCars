@@ -2,16 +2,20 @@ extends Camera3D
 
 class_name RoadBuilderCamera
 
+const VehicleControlMath = preload("res://Scripts/Driving/vehicle_control.gd")
+
 @export var dynamic_road: DynamicRoad
 # 配置参数
-@export var enabled = true
-@export var mouse_capture = false
-@export var mouse_input_enabled = true
+@export var enabled: bool = true
+@export var mouse_capture: bool = false
+@export var mouse_input_enabled: bool = true
 @export_group("Properties")
 @export var backward_speed_start: float = 7.0  # 初始后退速度（单位/秒）
 @export var backward_acceleration: float = 0.5 # 后退速度增加速度
+@export var backward_speed_max: float = 30.0
 @export var rotation_sensitivity: float = 0.001  # 鼠标旋转灵敏度
 @export var rotation_smoothness: float = 8.0  # 旋转平滑度（值越大越平滑）
+@export var maximum_lateral_acceleration: float = 4.0
 @export var max_pitch_angle: float = 35  # 最大俯仰角度（度）
 @export var min_pitch_angle: float = -35  # 最小俯仰角度（度）
 @export var max_yaw_angle: float = 170
@@ -89,16 +93,31 @@ func _process(delta: float) -> void:
 		_is_first_frame = false
 		return
 		
-	backward_speed += backward_acceleration * delta
+	backward_speed = minf(
+		backward_speed + backward_acceleration * delta,
+		backward_speed_max
+	)
 	
 	if mouse_input_enabled:
-		var min_turning_radius = (dynamic_road.road_width / 2.0) * 3
-		var max_turning_angular_velocity = backward_speed / min_turning_radius
-		var turning_angular_velocity = min(rotation_smoothness, max_turning_angular_velocity)
-		# 平滑旋转过渡
-		
-		_current_rotation = \
-			_current_rotation.lerp(_target_rotation, turning_angular_velocity * delta)
+		var max_turning_angular_velocity := VehicleControlMath.maximum_turn_rate(
+			backward_speed,
+			maximum_lateral_acceleration
+		)
+		var turning_angular_velocity: float = minf(
+			rotation_smoothness,
+			max_turning_angular_velocity
+		)
+		var maximum_rotation_step: float = turning_angular_velocity * delta
+		_current_rotation.x = move_toward(
+			_current_rotation.x,
+			_target_rotation.x,
+			maximum_rotation_step
+		)
+		_current_rotation.y += clampf(
+			angle_difference(_current_rotation.y, _target_rotation.y),
+			-maximum_rotation_step,
+			maximum_rotation_step
+		)
 		rotation = _current_rotation
 	
 	

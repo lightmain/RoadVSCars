@@ -1,6 +1,9 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+/reports/
+.DS_Store
+*.uid
 
 # Exported builds and editor recovery files
 /*.exe

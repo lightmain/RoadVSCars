@@ -6,12 +6,12 @@
 arc-length lookup, curvature, and pruning behavior before `RoadPath` exists.
 
 **Acceptance criteria:**
-- [ ] Tests cover straight and turning paths.
-- [ ] Tests cover empty/single-sample input and pruning with global IDs.
-- [ ] The new suite fails because production behavior is not implemented.
+- [x] Tests cover straight and turning paths.
+- [x] Tests cover empty/single-sample input and pruning with global IDs.
+- [x] The new suite fails because production behavior is not implemented.
 
 **Verification:**
-- [ ] Run the targeted GdUnit suite and retain the RED result.
+- [x] Run the targeted GdUnit suite and retain the RED result.
 
 **Dependencies:** None
 
@@ -26,13 +26,13 @@ arc-length lookup, curvature, and pruning behavior before `RoadPath` exists.
 arc-length target lookup, curvature metadata, and safe pruning.
 
 **Acceptance criteria:**
-- [ ] Sample spacing and cumulative distance meet test tolerances.
-- [ ] Projection returns finite progress and never requires a world-axis check.
-- [ ] Pruning preserves monotonic IDs and cumulative distance.
+- [x] Sample spacing and cumulative distance meet test tolerances.
+- [x] Projection returns finite progress and never requires a world-axis check.
+- [x] Pruning preserves monotonic IDs and cumulative distance.
 
 **Verification:**
-- [ ] Targeted path tests pass.
-- [ ] Headless import succeeds.
+- [x] Targeted path tests pass.
+- [x] Headless import succeeds.
 
 **Dependencies:** Task 1
 
@@ -48,13 +48,13 @@ arc-length target lookup, curvature metadata, and safe pruning.
 curvature speed limits, path-end limits, and throttle/brake splitting.
 
 **Acceptance criteria:**
-- [ ] Left/right/straight steering cases have correct sign and bounds.
-- [ ] Higher curvature cannot produce a higher curve speed limit.
-- [ ] Throttle and brake are finite, clamped, and never active together.
+- [x] Left/right/straight steering cases have correct sign and bounds.
+- [x] Higher curvature cannot produce a higher curve speed limit.
+- [x] Throttle and brake are finite, clamped, and never active together.
 
 **Verification:**
-- [ ] Targeted control tests fail before and pass after implementation.
-- [ ] All foundation tests pass together.
+- [x] Targeted control tests fail before and pass after implementation.
+- [x] All foundation tests pass together.
 
 **Dependencies:** None
 
@@ -70,13 +70,13 @@ curvature speed limits, path-end limits, and throttle/brake splitting.
 publish/query the new path through `DynamicRoad`.
 
 **Acceptance criteria:**
-- [ ] Camera motion produces fixed-spacing path samples.
-- [ ] New samples follow the documented schema.
-- [ ] Road cleanup cannot invalidate active progress or access an empty array.
+- [x] Camera motion produces fixed-spacing path samples.
+- [x] New samples follow the documented schema.
+- [x] Road cleanup cannot invalidate active progress or access an empty array.
 
 **Verification:**
-- [ ] Integration-oriented path tests pass.
-- [ ] Headless import succeeds.
+- [x] Integration-oriented path tests pass.
+- [x] Headless import succeeds.
 
 **Dependencies:** Task 2
 
@@ -94,13 +94,13 @@ with projection, speed-scaled lookahead, Pure Pursuit, curvature planning, and
 bounded PI speed control.
 
 **Acceptance criteria:**
-- [ ] AI outputs one dictionary containing throttle, brake, and steering.
-- [ ] Cursor progress is monotonic through arbitrary horizontal turns.
-- [ ] Missing/short paths return neutral finite commands.
+- [x] AI outputs one dictionary containing throttle, brake, and steering.
+- [x] Cursor progress is monotonic through arbitrary horizontal turns.
+- [x] Missing/short paths return neutral finite commands.
 
 **Verification:**
-- [ ] Full GdUnit suite passes.
-- [ ] Headless import succeeds.
+- [x] Full GdUnit suite passes.
+- [x] Headless import succeeds.
 
 **Dependencies:** Tasks 2, 3, and 4
 
@@ -117,13 +117,13 @@ bounded PI speed control.
 engine force, braking, and smoothed steering while retaining manual behavior.
 
 **Acceptance criteria:**
-- [ ] AI never requests reverse engine force to slow down.
-- [ ] Manual reverse and brake continue to work.
-- [ ] Camera switching and speed UI still receive valid values.
+- [x] AI never requests reverse engine force to slow down.
+- [x] Manual reverse and brake continue to work.
+- [x] Camera switching and speed UI still receive valid values.
 
 **Verification:**
-- [ ] Headless import succeeds.
-- [ ] Main scene starts without runtime errors.
+- [x] Headless import succeeds.
+- [x] Main scene starts without runtime errors.
 
 **Dependencies:** Task 5
 
@@ -139,13 +139,13 @@ engine force, braking, and smoothed steering while retaining manual behavior.
 force, brake, and steering-rate limits from observed gameplay.
 
 **Acceptance criteria:**
-- [ ] Car converges to the path without sustained oscillation on straight road.
-- [ ] Car slows before sharp turns and accelerates smoothly afterward.
-- [ ] No scene-local values refer to removed PID properties.
+- [x] Car converges to the path without sustained oscillation on straight road.
+- [x] Car slows before sharp turns and accelerates smoothly afterward.
+- [x] No scene-local values refer to removed PID properties.
 
 **Verification:**
-- [ ] Run straight, alternating-turn, and sharp-turn scenarios.
-- [ ] Capture runtime diagnostics and a gameplay screenshot.
+- [x] Run straight, alternating-turn, and sharp-turn scenarios.
+- [x] Capture runtime diagnostics and a gameplay screenshot.
 
 **Dependencies:** Task 6
 
@@ -162,12 +162,12 @@ force, brake, and steering-rate limits from observed gameplay.
 check existing manual, camera, UI, and fullscreen behavior.
 
 **Acceptance criteria:**
-- [ ] AI remains on-road for at least 60 seconds with no non-finite commands.
-- [ ] Old road and path data are pruned without errors.
-- [ ] Existing non-AI controls listed in the spec remain functional.
+- [x] AI remains on-road for at least 60 seconds with no non-finite commands.
+- [x] Old road and path data are pruned without errors.
+- [x] Existing non-AI controls listed in the spec remain functional.
 
 **Verification:**
-- [ ] Complete `checklist.md` with observed results.
+- [x] Complete `checklist.md` with observed results.
 
 **Dependencies:** Task 7
 

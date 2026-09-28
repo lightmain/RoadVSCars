@@ -2,6 +2,8 @@ extends Node3D
 
 class_name DynamicRoad
 
+const RoadPathScript = preload("res://Scripts/Driving/road_path.gd")
+
 @export var camera: RoadBuilderCamera
 @export var road_material: Material           # 道路材质
 # 配置参数
@@ -12,7 +14,7 @@ class_name DynamicRoad
 @export var max_segment_length: float = 3.0
 @export var curvature_threshold: float = 0.02  # 曲率阈值，大于此值则缩短分段
 @export var max_segments: int = 4000           # 最大路段数
-@export var navigation_point_interval: int = 10# 导航点间隔
+@export var path_sample_spacing: float = 2.0
 
 # 内部变量
 var segments: Array = []                      # 存储路段实例
@@ -22,8 +24,8 @@ var last_pitch: float = 0                     # 上一帧俯仰角
 var segment_counter: int = 0                  # 路段计数器
 var is_first_segment: bool = true             # 是否是第一段
 
-var navigation_points: Array = []
-signal new_navigation_point(navigation_point)
+var road_path: RefCounted
+signal path_extended(end_distance: float)
 
 func _ready() -> void:
 	# 确保摄像机已设置
@@ -37,18 +39,15 @@ func _ready() -> void:
 	last_basis = _get_camera_road_basis()
 	last_pitch = _get_camera_pitch()
 	segment_counter = 0
+	road_path = RoadPathScript.new(path_sample_spacing)
+	road_path.reset(last_position, last_basis.z)
 	segments.append({
 		"instance": null,
 		"position": last_position,
 		"basis": last_basis,
 		"pitch": last_pitch,
-		"index": segment_counter
-	})
-	navigation_points.append({
-		"position": last_position,
-		"basis": last_basis,
-		"pitch": last_pitch,
-		"index": segment_counter
+		"index": segment_counter,
+		"path_distance": road_path.get_end_distance(),
 	})
 
 func _process(_delta: float) -> void:
@@ -56,17 +55,23 @@ func _process(_delta: float) -> void:
 	var current_position = _get_camera_road_position()
 	var current_basis = _get_camera_road_basis()
 	var current_pitch = _get_camera_pitch()
+	var previous_sample_count: int = road_path.get_sample_count()
+	road_path.append_control_point(current_position, current_basis.z)
+	if road_path.get_sample_count() != previous_sample_count:
+		path_extended.emit(road_path.get_end_distance())
 
 	# 计算移动距离
 	var distance_moved = last_position.distance_to(current_position)
+	if distance_moved <= 0.0001:
+		return
 	var curvature = _calculate_curvature(current_basis, distance_moved, current_pitch)
 	var adaptive_length = lerp(max_segment_length, min_segment_length, 
-							  min(curvature / curvature_threshold, 1.0))
+							  min(curvature / maxf(curvature_threshold, 0.0001), 1.0))
 	if (distance_moved < adaptive_length):
 		return
 	
 	# 根据移动距离生成多个段
-	var segments_to_create = ceil(distance_moved / adaptive_length)
+	var segments_to_create := ceili(distance_moved / adaptive_length)
 	
 	for i in range(segments_to_create):
 		# 计算插值位置
@@ -90,7 +95,6 @@ func _calculate_curvature(new_basis: Basis, distance: float, pitch: float) -> fl
 	# 计算方向变化角度（弧度）
 	var yaw_cur = abs(last_basis.z.angle_to(new_basis.z)) / distance
 	var pitch_cur = abs(pitch - last_pitch) / distance
-	#print(pitch, " ", last_pitch, " ", pitch_cur)
 	return yaw_cur * 0.1 + pitch_cur * 0.9
 	
 # 获取摄像机下方3米位置
@@ -151,17 +155,9 @@ func _create_road_segment(sposition: Vector3, sbasis: Basis, pitch: float) -> vo
 		"position": sposition,
 		"basis": sbasis,
 		"pitch": pitch,
-		"index": segment_counter
+		"index": segment_counter,
+		"path_distance": road_path.get_end_distance(),
 	})
-	if segment_counter % navigation_point_interval == 0:
-		var navigation_point = {
-			"position": sposition,
-			"basis": sbasis,
-			"pitch": pitch,
-			"index": segment_counter
-		}
-		navigation_points.append(navigation_point)
-		emit_signal("new_navigation_point", navigation_point)
 		
 	# 更新第一段标志
 	if is_first_segment:
@@ -301,8 +297,8 @@ func _cleanup_old_segments() -> void:
 			var segment_data = segments.pop_front()
 			if is_instance_valid(segment_data["instance"]):
 				segment_data["instance"].queue_free()
-			if segment_data["index"] == navigation_points.front()['index']:
-				navigation_points.pop_front()
+		if not segments.is_empty():
+			road_path.prune_before_distance(segments.front()["path_distance"])
 				
 
 # 更新目标位置（在摄像机脚本中调用）
@@ -321,5 +317,5 @@ func debug_visualize_road() -> void:
 			var hue = float(i) / segments.size()
 			material.albedo_color = Color.from_hsv(hue, 0.8, 0.8)
 
-func get_navigation_points() -> Array:
-	return navigation_points
+func get_road_path() -> RefCounted:
+	return road_path
