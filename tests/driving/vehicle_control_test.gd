@@ -143,6 +143,22 @@ func test_travel_speed_stays_positive_after_vehicle_spins() -> void:
 	assert_float(speed).is_equal_approx(20.0, 0.001)
 
 
+func test_deceleration_uses_speed_drop_per_second() -> void:
+	var braking_deceleration: float = VehicleControl.calculate_deceleration(
+		30.0,
+		20.0,
+		0.5
+	)
+	var acceleration: float = VehicleControl.calculate_deceleration(
+		20.0,
+		30.0,
+		0.5
+	)
+
+	assert_float(braking_deceleration).is_equal_approx(20.0, 0.001)
+	assert_float(acceleration).is_equal(0.0)
+
+
 func test_positive_speed_error_only_requests_throttle() -> void:
 	var command: Dictionary = VehicleControl.split_speed_control(
 		5.0,

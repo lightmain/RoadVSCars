@@ -2,6 +2,9 @@ extends VehicleBody3D
 
 class_name BasicVehicle
 
+const VehicleControlMath = preload("res://Scripts/Driving/vehicle_control.gd")
+const GRAVITY_ACCELERATION: float = 9.80665
+
 @export_group("Vehicle Properties")  # 第二个参数是属性前缀（可选）
 @export var MAX_STEER: float = 0.6981 #40度
 @export var ENGINE_POWER: float = 300.0
@@ -13,6 +16,10 @@ class_name BasicVehicle
 @export var third_camera_available: bool = true
 @export var manual_control: bool = false
 
+@export_group("Diagnostics")
+@export var log_maximum_deceleration: bool = true
+@export_range(0.1, 10.0, 0.1) var deceleration_log_interval: float = 1.0
+
 @export_group("References")
 @export var dynamic_road: DynamicRoad
 
@@ -22,9 +29,14 @@ class_name BasicVehicle
 @onready var ai: BasicAI = $BasicAI
 
 var lookat: Vector3
+var _previous_speed: float = 0.0
+var _maximum_deceleration: float = 0.0
+var _deceleration_log_elapsed: float = 0.0
+var _maximum_deceleration_changed: bool = false
 
 func _ready() -> void:
 	lookat = global_position
+	_previous_speed = VehicleControlMath.travel_speed(linear_velocity)
 	if third_camera_available:
 		camera_3d.current = true
 		reverse_camera.current = false
@@ -33,10 +45,47 @@ func _ready() -> void:
 		reverse_camera.current = false
 
 func _physics_process(delta: float) -> void:
+	_measure_deceleration(delta)
 	if manual_control:
 		_hand_control(delta)
 	else:
 		_ai_control(delta)
+
+
+func _measure_deceleration(delta: float) -> void:
+	var current_speed := VehicleControlMath.travel_speed(linear_velocity)
+	var deceleration := VehicleControlMath.calculate_deceleration(
+		_previous_speed,
+		current_speed,
+		delta
+	)
+	_previous_speed = current_speed
+	if not log_maximum_deceleration:
+		return
+
+	_deceleration_log_elapsed += delta
+	if deceleration > _maximum_deceleration:
+		_maximum_deceleration = deceleration
+		_maximum_deceleration_changed = true
+	if (
+		_maximum_deceleration_changed
+		and _deceleration_log_elapsed >= deceleration_log_interval
+	):
+		print(
+			(
+				"[VehicleTelemetry] max_deceleration=%.2f m/s^2 (%.2f g), "
+				+ "speed=%.1f km/h, brake=%.2f"
+			)
+			% [
+				_maximum_deceleration,
+				_maximum_deceleration / GRAVITY_ACCELERATION,
+				current_speed * 3.6,
+				brake / maxf(BRAKE_POWER, 0.0001),
+			]
+		)
+		_deceleration_log_elapsed = 0.0
+		_maximum_deceleration_changed = false
+
 
 func _ai_control(delta: float) -> void:
 	var command := ai.get_control(delta)

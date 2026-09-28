@@ -93,6 +93,18 @@ static func travel_speed(linear_velocity: Vector3) -> float:
 	return speed if is_finite(speed) else 0.0
 
 
+static func calculate_deceleration(
+	previous_speed: float,
+	current_speed: float,
+	delta: float
+) -> float:
+	if delta <= MIN_DISTANCE:
+		return 0.0
+	if not is_finite(previous_speed) or not is_finite(current_speed):
+		return 0.0
+	return maxf((previous_speed - current_speed) / delta, 0.0)
+
+
 static func stopping_speed_limit(
 	remaining_distance: float,
 	stop_margin: float,
