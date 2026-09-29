@@ -11,7 +11,7 @@ const MARKER_INTERVAL: float = 10.0
 @export var road_material: Material           # 道路材质
 # 配置参数
 @export_group("Road Properties")
-@export var road_width: float = 20.0          # 道路宽度
+@export var road_width: float = 30.0          # 道路宽度
 @export var road_thickness: float = 1         # 道路厚度
 @export var min_segment_length: float = 0.15
 @export var max_segment_length: float = 3.0

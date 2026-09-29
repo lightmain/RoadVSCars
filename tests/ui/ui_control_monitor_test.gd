@@ -58,3 +58,31 @@ func test_control_monitor_clamps_and_splits_vehicle_commands() -> void:
 	assert_float(ui.get_node(
 		"ControlMonitor/VBoxContainer/BrakeRow/Brake"
 	).max_value).is_equal(1.0)
+
+
+func test_camera_selector_emits_mode_and_updates_selected_button() -> void:
+	var ui: Control = auto_free(UIScene.instantiate())
+	add_child(ui)
+	var selected_modes: Array[StringName] = []
+	ui.connect(
+		"camera_selected",
+		func(camera_mode: StringName) -> void:
+			selected_modes.append(camera_mode)
+	)
+	var road_button: Button = ui.get_node(
+		"CameraSelector/MarginContainer/Buttons/RoadCamera"
+	)
+	var chase_button: Button = ui.get_node(
+		"CameraSelector/MarginContainer/Buttons/ChaseCamera"
+	)
+	var observer_button: Button = ui.get_node(
+		"CameraSelector/MarginContainer/Buttons/ObserverCamera"
+	)
+
+	observer_button.pressed.emit()
+
+	assert_int(selected_modes.size()).is_equal(1)
+	assert_str(selected_modes[0]).is_equal("observer")
+	assert_bool(observer_button.button_pressed).is_true()
+	assert_bool(road_button.button_pressed).is_false()
+	assert_bool(chase_button.button_pressed).is_false()

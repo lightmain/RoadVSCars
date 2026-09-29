@@ -34,6 +34,10 @@ func test_projects_onto_path_without_using_world_z_progress() -> void:
 		Vector3(5.0, 0.0, 0.0),
 		Vector3.ONE * 0.001
 	)
+	assert_vector(projection["tangent"]).is_equal_approx(
+		Vector3.RIGHT,
+		Vector3.ONE * 0.001
+	)
 	assert_float(projection["distance"]).is_equal_approx(5.0, 0.001)
 
 

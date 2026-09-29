@@ -120,6 +120,111 @@ func test_moving_end_target_accelerates_until_ten_meter_gap() -> void:
 	assert_float(capped_speed).is_equal_approx(45.0, 0.001)
 
 
+func test_distance_target_speed_stops_at_thirty_meter_end_gap() -> void:
+	var target_speed: float = VehicleControl.distance_target_speed(
+		30.0,
+		30.0,
+		10.0,
+		80.0
+	)
+
+	assert_float(target_speed).is_equal_approx(0.0, 0.001)
+
+
+func test_distance_target_speed_increases_with_available_distance() -> void:
+	var near_speed: float = VehicleControl.distance_target_speed(
+		40.0,
+		30.0,
+		10.0,
+		80.0
+	)
+	var far_speed: float = VehicleControl.distance_target_speed(
+		130.0,
+		30.0,
+		10.0,
+		80.0
+	)
+
+	assert_float(near_speed).is_equal_approx(sqrt(200.0), 0.001)
+	assert_float(far_speed).is_greater(near_speed)
+
+
+func test_distance_target_speed_has_eighty_meter_per_second_hard_limit() -> void:
+	var target_speed: float = VehicleControl.distance_target_speed(
+		10000.0,
+		30.0,
+		10.0,
+		80.0
+	)
+
+	assert_float(target_speed).is_equal_approx(80.0, 0.001)
+
+
+func test_road_bounds_are_relative_to_the_nearest_road_point() -> void:
+	var is_outside: bool = VehicleControl.is_outside_road_bounds(
+		Vector3(0.0, -99.0, 0.0),
+		Vector3(0.0, -100.0, 0.0),
+		Vector3.BACK,
+		40.0,
+		5.0,
+		6.0
+	)
+
+	assert_bool(is_outside).is_false()
+
+
+func test_road_bounds_allow_a_lateral_safety_margin() -> void:
+	var is_outside: bool = VehicleControl.is_outside_road_bounds(
+		Vector3(24.0, 1.0, 0.0),
+		Vector3.ZERO,
+		Vector3.BACK,
+		40.0,
+		5.0,
+		6.0
+	)
+
+	assert_bool(is_outside).is_false()
+
+
+func test_road_bounds_detect_a_vehicle_far_beside_the_road() -> void:
+	var is_outside: bool = VehicleControl.is_outside_road_bounds(
+		Vector3(26.0, 1.0, 0.0),
+		Vector3.ZERO,
+		Vector3.BACK,
+		40.0,
+		5.0,
+		6.0
+	)
+
+	assert_bool(is_outside).is_true()
+
+
+func test_road_bounds_detect_a_vehicle_below_the_road() -> void:
+	var is_outside: bool = VehicleControl.is_outside_road_bounds(
+		Vector3(0.0, -7.0, 0.0),
+		Vector3.ZERO,
+		Vector3.BACK,
+		40.0,
+		5.0,
+		6.0
+	)
+
+	assert_bool(is_outside).is_true()
+
+
+func test_road_bounds_ignore_longitudinal_distance_from_path_endpoint() -> void:
+	var is_outside: bool = VehicleControl.is_outside_road_bounds(
+		Vector3(0.0, 1.0, -100.0),
+		Vector3.ZERO,
+		Vector3.BACK,
+		40.0,
+		5.0,
+		6.0
+	)
+
+	assert_bool(is_outside).is_false()
+
+
 func test_road_builder_turn_rate_uses_original_road_width_radius() -> void:
 	var turn_rate: float = VehicleControl.road_builder_turn_rate(
 		80.0,

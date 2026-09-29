@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://bjfhsju4wplt6"]
+[gd_scene load_steps=11 format=3 uid="uid://bjfhsju4wplt6"]
 
 [ext_resource type="Script" uid="uid://b1io0g5lnq3sh" path="res://Scenes/Temp/ui.gd" id="1_n5a0f"]
 
@@ -46,6 +46,29 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
+[sub_resource type="ButtonGroup" id="ButtonGroup_camera"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_camera_normal"]
+bg_color = Color(0.16, 0.18, 0.22, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_camera_hover"]
+bg_color = Color(0.24, 0.27, 0.32, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_camera_pressed"]
+bg_color = Color(0.16, 0.55, 0.78, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [node name="UI" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -53,6 +76,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_n5a0f")
 
 [node name="ControlMonitor" type="PanelContainer" parent="."]
@@ -148,6 +172,69 @@ theme_override_styles/background = SubResource("StyleBoxFlat_track")
 theme_override_styles/fill = SubResource("StyleBoxFlat_brake")
 max_value = 1.0
 show_percentage = false
+
+[node name="CameraSelector" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -165.0
+offset_top = 20.0
+offset_right = 165.0
+offset_bottom = 68.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="CameraSelector"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="Buttons" type="HBoxContainer" parent="CameraSelector/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="RoadCamera" type="Button" parent="CameraSelector/MarginContainer/Buttons"]
+custom_minimum_size = Vector2(104, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.92, 0.93, 0.95, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_camera_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_camera_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_camera_pressed")
+toggle_mode = true
+button_group = SubResource("ButtonGroup_camera")
+text = "Road"
+
+[node name="ChaseCamera" type="Button" parent="CameraSelector/MarginContainer/Buttons"]
+custom_minimum_size = Vector2(104, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.92, 0.93, 0.95, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_camera_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_camera_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_camera_pressed")
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("ButtonGroup_camera")
+text = "Chase"
+
+[node name="ObserverCamera" type="Button" parent="CameraSelector/MarginContainer/Buttons"]
+custom_minimum_size = Vector2(104, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.92, 0.93, 0.95, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_camera_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_camera_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_camera_pressed")
+toggle_mode = true
+button_group = SubResource("ButtonGroup_camera")
+text = "Observer"
 
 [node name="SpeedMonitor" type="Control" parent="."]
 layout_mode = 1

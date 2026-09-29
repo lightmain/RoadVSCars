@@ -13,6 +13,8 @@ const VehicleControlMath = preload("res://Scripts/Driving/vehicle_control.gd")
 @export var backward_speed_start: float = 7.0  # 初始后退速度（单位/秒）
 @export var backward_acceleration: float = 0.5 # 后退速度增加速度
 @export var backward_speed_max: float = 80.0
+@export var temporary_slow_speed: float = 7.0
+@export var temporary_slow_deceleration: float = 2.0
 @export var rotation_sensitivity: float = 0.001  # 鼠标旋转灵敏度
 @export var rotation_smoothness: float = 8.0  # 旋转平滑度（值越大越平滑）
 @export var maximum_lateral_acceleration: float = 9.0
@@ -26,6 +28,8 @@ var _target_rotation: Vector3 = Vector3.ZERO
 var _current_rotation: Vector3 = Vector3.ZERO
 var _mouse_position: Vector2 = Vector2.ZERO
 var _is_first_frame: bool = true
+var _temporary_slowdown_active: bool = false
+var _speed_before_slowdown: float = 0.0
 
 func _ready() -> void:
 	# 设置鼠标模式
@@ -71,6 +75,9 @@ func _input(event: InputEvent) -> void:
 	
 	# 处理按键事件
 	if event is InputEventKey:
+		if event.keycode == KEY_SPACE and not event.echo:
+			_set_temporary_slowdown(event.pressed)
+
 		if event.pressed:
 			# ESC键释放鼠标
 			if event.keycode == KEY_ESCAPE and mouse_capture:
@@ -92,11 +99,18 @@ func _process(delta: float) -> void:
 	if _is_first_frame:
 		_is_first_frame = false
 		return
-		
-	backward_speed = minf(
-		backward_speed + backward_acceleration * delta,
-		backward_speed_max
-	)
+
+	if _temporary_slowdown_active:
+		backward_speed = move_toward(
+			backward_speed,
+			temporary_slow_speed,
+			temporary_slow_deceleration * delta
+		)
+	else:
+		backward_speed = minf(
+			backward_speed + backward_acceleration * delta,
+			backward_speed_max
+		)
 	
 	if mouse_input_enabled:
 		var road_width := dynamic_road.road_width if dynamic_road else 1.0
@@ -118,6 +132,22 @@ func _process(delta: float) -> void:
 	
 	if dynamic_road:
 		dynamic_road._update_target_position()
+
+
+func _set_temporary_slowdown(active: bool) -> void:
+	if active == _temporary_slowdown_active:
+		return
+
+	_temporary_slowdown_active = active
+	if active:
+		_speed_before_slowdown = backward_speed
+	else:
+		backward_speed = _speed_before_slowdown
+
+
+func get_navigation_target_speed() -> float:
+	return backward_speed
+
 
 # 窗口关闭时恢复鼠标
 func _on_window_close_requested() -> void:

@@ -104,9 +104,16 @@ func project(position: Vector3, hint_index: int = 0) -> Dictionary:
 		var squared_distance := position.distance_squared_to(projected)
 		if squared_distance < best_squared_distance:
 			best_squared_distance = squared_distance
+			var projected_tangent := _interpolate_tangent(
+				first["tangent"],
+				second["tangent"],
+				weight,
+				segment
+			)
 			best_result = {
 				"valid": true,
 				"position": projected,
+				"tangent": projected_tangent,
 				"distance": lerpf(first["distance"], second["distance"], weight),
 				"segment_index": first["index"],
 			}

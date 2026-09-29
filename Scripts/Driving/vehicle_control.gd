@@ -72,6 +72,51 @@ static func moving_target_speed(
 	return minf(requested_speed, maxf(maximum_speed, 0.0))
 
 
+static func distance_target_speed(
+	current_gap: float,
+	target_gap: float,
+	deceleration: float,
+	maximum_speed: float
+) -> float:
+	var stopping_limit := stopping_speed_limit(
+		current_gap,
+		target_gap,
+		deceleration
+	)
+	return minf(stopping_limit, maxf(maximum_speed, 0.0))
+
+
+static func is_outside_road_bounds(
+	vehicle_position: Vector3,
+	road_position: Vector3,
+	road_tangent: Vector3,
+	road_width: float,
+	lateral_margin: float,
+	vertical_drop_limit: float
+) -> bool:
+	var horizontal_tangent := Vector2(road_tangent.x, road_tangent.z)
+	var horizontal_offset := Vector2(
+		vehicle_position.x - road_position.x,
+		vehicle_position.z - road_position.z
+	)
+	var lateral_distance := horizontal_offset.length()
+	if horizontal_tangent.length_squared() > MIN_DISTANCE:
+		var road_right := Vector2(
+			horizontal_tangent.y,
+			-horizontal_tangent.x
+		).normalized()
+		lateral_distance = absf(horizontal_offset.dot(road_right))
+
+	var lateral_limit := (
+		maxf(road_width, 0.0) * 0.5 + maxf(lateral_margin, 0.0)
+	)
+	var vertical_drop := road_position.y - vehicle_position.y
+	return (
+		lateral_distance > lateral_limit
+		or vertical_drop > maxf(vertical_drop_limit, 0.0)
+	)
+
+
 static func road_builder_turn_rate(
 	speed: float,
 	road_width: float,

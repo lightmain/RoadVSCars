@@ -4,6 +4,7 @@
 [ext_resource type="Material" uid="uid://byv4p37pxl66e" path="res://Scenes/Levels/road_meterial.tres" id="2_lkqqh"]
 [ext_resource type="PackedScene" uid="uid://cig0lyywuaagt" path="res://Scenes/Entities/BasicVehicle.tscn" id="2_u8q20"]
 [ext_resource type="Script" uid="uid://drb0xmjeql3h3" path="res://Scenes/Levels/camera_3d.gd" id="3_yjxcc"]
+[ext_resource type="Script" uid="uid://dbo23qopubbk4" path="res://Scenes/Levels/vehicle_fleet.gd" id="4_fleet"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_eth5y"]
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
@@ -55,12 +56,10 @@ camera = NodePath("../../Camera3D")
 road_material = ExtResource("2_lkqqh")
 road_width = 40.0
 
-[node name="Entities" type="Node3D" parent="." unique_id=1240558796]
-
-[node name="BasicVehicle" parent="Entities" unique_id=1891487118 node_paths=PackedStringArray("dynamic_road") instance=ExtResource("2_u8q20")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.486191, 0.6941154, -3.4542608)
-observer_camera_enabled = false
-dynamic_road = NodePath("../../Environment/DynamicRoad")
+[node name="Entities" type="Node3D" parent="." unique_id=1240558796 node_paths=PackedStringArray("dynamic_road")]
+script = ExtResource("4_fleet")
+vehicle_scene = ExtResource("2_u8q20")
+dynamic_road = NodePath("../Environment/DynamicRoad")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=440029993 node_paths=PackedStringArray("dynamic_road")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 25)

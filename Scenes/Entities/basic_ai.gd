@@ -14,9 +14,7 @@ const VehicleControlMath = preload("res://Scripts/Driving/vehicle_control.gd")
 @export var maximum_speed: float = 80.0
 @export var maximum_lateral_acceleration: float = 9.0
 @export_range(0.1, 1.0) var curve_speed_safety_factor: float = 0.6
-@export var path_end_margin: float = 10.0
-@export var end_gap_gain: float = 0.5
-@export var catch_up_speed_margin: float = 15.0
+@export var path_end_margin: float = 15.0
 @export var comfortable_deceleration: float = 10.0
 
 @export_group("Speed Control")
@@ -119,20 +117,13 @@ func _calculate_target_speed(path: RefCounted) -> float:
 		curve_limit = minf(curve_limit, approach_limit)
 
 	var end_gap: float = maxf(path.get_end_distance() - _path_distance, 0.0)
-	var builder_speed := vehicle.get_target_speed()
-	var catch_up_margin := maxf(catch_up_speed_margin, 0.0)
-	var catch_up_limit := minf(
-		maximum_speed + catch_up_margin,
-		builder_speed + catch_up_margin
-	)
-	var following_speed := VehicleControlMath.moving_target_speed(
-		builder_speed,
+	var distance_limit: float = VehicleControlMath.distance_target_speed(
 		end_gap,
 		path_end_margin,
-		end_gap_gain,
-		catch_up_limit
+		comfortable_deceleration,
+		maximum_speed
 	)
-	var target_speed := following_speed
+	var target_speed: float = distance_limit
 	target_speed = minf(target_speed, curve_limit)
 	return maxf(target_speed, 0.0)
 
