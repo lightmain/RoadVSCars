@@ -1,10 +1,10 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://byv4p37pxl66e"]
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
 
 [ext_resource type="Shader" path="res://Scenes/Levels/road_surface.gdshader" id="1_surface"]
 
 [resource]
 shader = ExtResource("1_surface")
-shader_parameter/use_world_coordinates = false
+shader_parameter/use_world_coordinates = true
 shader_parameter/road_width = 40.0
 shader_parameter/starting_road_join_z = 25.0
 shader_parameter/grass_width = 5.0

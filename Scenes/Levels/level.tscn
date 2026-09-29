@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://drb0xmjeql3h3" path="res://Scenes/Levels/camera_3d.gd" id="3_yjxcc"]
 [ext_resource type="Script" uid="uid://dbo23qopubbk4" path="res://Scenes/Levels/vehicle_fleet.gd" id="4_fleet"]
 [ext_resource type="PackedScene" uid="uid://bjfhsju4wplt6" path="res://Scenes/Temp/ui.tscn" id="5_ui"]
+[ext_resource type="Material" path="res://Scenes/Levels/starting_road_material.tres" id="6_starting_road"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_eth5y"]
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
@@ -50,6 +51,7 @@ shape = SubResource("BoxShape3D_f1n8c")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Environment/StartingRoad" unique_id=1113650134]
 transform = Transform3D(1, 0.000342137, -0.000209498, -0.000342139, 1, -1.39516e-05, 0.000209495, 1.40046e-05, 1, 0, -0.5, 0)
+material_override = ExtResource("6_starting_road")
 mesh = SubResource("BoxMesh_7x7pb")
 
 [node name="DynamicRoad" type="Node3D" parent="Environment" unique_id=282903026 node_paths=PackedStringArray("camera")]

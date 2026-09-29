@@ -6,6 +6,8 @@ const RoadPathScript = preload("res://Scripts/Driving/road_path.gd")
 const ROAD_COLOR := Color.WHITE
 const MARKER_COLOR := Color.BLACK
 const MARKER_INTERVAL: float = 10.0
+const CENTER_DASH_LENGTH: float = 9.0
+const CENTER_DASH_GAP: float = 6.0
 
 @export var camera: RoadBuilderCamera
 @export var road_material: Material           # 道路材质
@@ -249,16 +251,19 @@ func _create_segment_mesh(
 	
 	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	
-	# 创建动态材质实例
-	var dynamic_material = road_material.duplicate() if road_material else StandardMaterial3D.new()
-	var start_marker := floori(start_distance / MARKER_INTERVAL)
-	var end_marker := floori(end_distance / MARKER_INTERVAL)
-	dynamic_material.albedo_color = (
-		MARKER_COLOR if end_marker > start_marker else ROAD_COLOR
-	)
-	
 	# 设置材质
-	surface_tool.set_material(dynamic_material)
+	var surface_material := (
+		road_material if road_material else StandardMaterial3D.new()
+	)
+	if surface_material is ShaderMaterial:
+		var shader_material := surface_material as ShaderMaterial
+		shader_material.set_shader_parameter("road_width", road_width)
+		shader_material.set_shader_parameter(
+			"dash_length",
+			CENTER_DASH_LENGTH
+		)
+		shader_material.set_shader_parameter("dash_gap", CENTER_DASH_GAP)
+	surface_tool.set_material(surface_material)
 	
 	# 计算方向向量
 	var right_vector = -sbasis.x.normalized()
@@ -281,25 +286,27 @@ func _create_segment_mesh(
 		prev_top_left = prev_position + half_width * prev_right_vector
 		prev_top_right = prev_position - half_width * prev_right_vector
 	
+	var surface_uvs := build_surface_uvs(start_distance, end_distance)
+
 	# 添加道路顶部（两个三角形）
 	# 第一个三角形：左上 -> 右上 -> 右下
-	surface_tool.set_uv(Vector2(0, 0))
+	surface_tool.set_uv(surface_uvs[0])
 	surface_tool.add_vertex(prev_top_left)
 	
-	surface_tool.set_uv(Vector2(1, 0))
+	surface_tool.set_uv(surface_uvs[1])
 	surface_tool.add_vertex(prev_top_right)
 	
-	surface_tool.set_uv(Vector2(1, 1))
+	surface_tool.set_uv(surface_uvs[2])
 	surface_tool.add_vertex(top_right)
 	
 	# 第二个三角形：左上 -> 右下 -> 左下
-	surface_tool.set_uv(Vector2(0, 0))
+	surface_tool.set_uv(surface_uvs[3])
 	surface_tool.add_vertex(prev_top_left)
 	
-	surface_tool.set_uv(Vector2(1, 1))
+	surface_tool.set_uv(surface_uvs[4])
 	surface_tool.add_vertex(top_right)
 	
-	surface_tool.set_uv(Vector2(0, 1))
+	surface_tool.set_uv(surface_uvs[5])
 	surface_tool.add_vertex(top_left)
 	
 	# 生成网格
@@ -307,6 +314,20 @@ func _create_segment_mesh(
 	surface_tool.generate_tangents()
 	surface_tool.commit(mesh)
 	mesh_instance.mesh = mesh
+
+
+static func build_surface_uvs(
+	start_distance: float,
+	end_distance: float
+) -> PackedVector2Array:
+	return PackedVector2Array([
+		Vector2(0.0, start_distance),
+		Vector2(1.0, start_distance),
+		Vector2(1.0, end_distance),
+		Vector2(0.0, start_distance),
+		Vector2(1.0, end_distance),
+		Vector2(0.0, end_distance),
+	])
 
 # 清理旧路段
 func _cleanup_old_segments() -> void:
