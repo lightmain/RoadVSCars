@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://cig0lyywuaagt"]
 
-[ext_resource type="Texture2D" uid="uid://b60211advn5vy" path="res://icon.svg" id="1_hvn30"]
 [ext_resource type="Script" uid="uid://c5f0rhvsr634w" path="res://Scenes/Entities/basic_vehicle.gd" id="1_uxyls"]
 [ext_resource type="Script" uid="uid://8haylajaljge" path="res://Scenes/Entities/basic_ai.gd" id="4_tpm3g"]
+[ext_resource type="Material" path="res://Scenes/Entities/wheel_material.tres" id="4_wheel"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_i43e1"]
 
@@ -23,18 +23,6 @@ size = Vector3(1, 1, 2)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_xk30x"]
 height = 0.3
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a4t66"]
-albedo_texture = ExtResource("1_hvn30")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3sd4p"]
-albedo_texture = ExtResource("1_hvn30")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ct1tp"]
-albedo_texture = ExtResource("1_hvn30")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nqye5"]
-albedo_texture = ExtResource("1_hvn30")
 
 [node name="BasicVehicle" type="VehicleBody3D" unique_id=192381905]
 collision_layer = 2
@@ -70,7 +58,7 @@ suspension_stiffness = 100.0
 [node name="MeshInstance3D" type="MeshInstance3D" parent="FrontLeft" unique_id=1033962128]
 transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("CylinderMesh_xk30x")
-surface_material_override/0 = SubResource("StandardMaterial3D_a4t66")
+surface_material_override/0 = ExtResource("4_wheel")
 
 [node name="BackLeft" type="VehicleWheel3D" parent="." unique_id=1699752433]
 transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 1, 0.4, -1.82)
@@ -81,7 +69,7 @@ suspension_stiffness = 100.0
 [node name="MeshInstance3D" type="MeshInstance3D" parent="BackLeft" unique_id=734604978]
 transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("CylinderMesh_xk30x")
-surface_material_override/0 = SubResource("StandardMaterial3D_3sd4p")
+surface_material_override/0 = ExtResource("4_wheel")
 
 [node name="FrontRight" type="VehicleWheel3D" parent="." unique_id=1275880189]
 transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -1, 0.4, 1.5)
@@ -92,7 +80,7 @@ suspension_stiffness = 100.0
 [node name="MeshInstance3D" type="MeshInstance3D" parent="FrontRight" unique_id=66437133]
 transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("CylinderMesh_xk30x")
-surface_material_override/0 = SubResource("StandardMaterial3D_ct1tp")
+surface_material_override/0 = ExtResource("4_wheel")
 
 [node name="BackRight" type="VehicleWheel3D" parent="." unique_id=725157768]
 transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -1, 0.4, -1.82)
@@ -103,7 +91,7 @@ suspension_stiffness = 100.0
 [node name="MeshInstance3D" type="MeshInstance3D" parent="BackRight" unique_id=1138754475]
 transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("CylinderMesh_xk30x")
-surface_material_override/0 = SubResource("StandardMaterial3D_nqye5")
+surface_material_override/0 = ExtResource("4_wheel")
 
 [node name="CameraPivot" type="Node3D" parent="." unique_id=321352729]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.432405, 0.566012)

@@ -415,6 +415,31 @@ func test_level_spawns_twenty_configured_vehicles() -> void:
 	assert_int(target_offsets.size()).is_greater(10)
 
 
+func test_vehicle_wheels_share_the_tire_shader_material() -> void:
+	var level: Node3D = auto_free(LevelScene.instantiate())
+	add_child(level)
+	var vehicle: BasicVehicle = level.get_node("Entities/Vehicle02")
+	var wheel_paths: Array[NodePath] = [
+		"FrontLeft/MeshInstance3D",
+		"BackLeft/MeshInstance3D",
+		"FrontRight/MeshInstance3D",
+		"BackRight/MeshInstance3D",
+	]
+	var shared_material: Material
+
+	for wheel_path in wheel_paths:
+		var wheel_mesh := vehicle.get_node(wheel_path) as MeshInstance3D
+		var material := wheel_mesh.get_surface_override_material(0)
+		assert_bool(material is ShaderMaterial).is_true()
+		assert_str(material.resource_path).is_equal(
+			"res://Scenes/Entities/wheel_material.tres"
+		)
+		if shared_material:
+			assert_object(material).is_same(shared_material)
+		else:
+			shared_material = material
+
+
 func test_basic_ai_applies_heading_recovery_after_large_rotation() -> void:
 	var level: Node3D = auto_free(LevelScene.instantiate())
 	add_child(level)
