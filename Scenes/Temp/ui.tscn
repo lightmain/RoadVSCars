@@ -256,3 +256,38 @@ theme_override_constants/margin_right = 50
 [node name="Label" type="Label" parent="SpeedMonitor/MarginContainer"]
 layout_mode = 2
 text = "Speed:0"
+
+[node name="FleetStatus" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -230.0
+offset_top = 132.0
+offset_right = -20.0
+offset_bottom = 318.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="FleetStatus"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="FleetStatus/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Title" type="Label" parent="FleetStatus/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.93, 0.95, 1)
+text = "Fleet 0 / 20"
+
+[node name="StatusGrid" type="GridContainer" parent="FleetStatus/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 5
+columns = 4

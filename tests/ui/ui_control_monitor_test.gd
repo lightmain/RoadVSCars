@@ -86,3 +86,19 @@ func test_camera_selector_emits_mode_and_updates_selected_button() -> void:
 	assert_bool(observer_button.button_pressed).is_true()
 	assert_bool(road_button.button_pressed).is_false()
 	assert_bool(chase_button.button_pressed).is_false()
+
+
+func test_fleet_status_panel_builds_twenty_stable_slots() -> void:
+	var ui: Control = auto_free(UIScene.instantiate())
+	add_child(ui)
+	var status_grid: GridContainer = ui.get_node(
+		"FleetStatus/MarginContainer/VBoxContainer/StatusGrid"
+	)
+	var title: Label = ui.get_node(
+		"FleetStatus/MarginContainer/VBoxContainer/Title"
+	)
+
+	assert_int(status_grid.get_child_count()).is_equal(20)
+	assert_str(status_grid.get_child(0).name).is_equal("Vehicle01")
+	assert_str(status_grid.get_child(19).name).is_equal("Vehicle20")
+	assert_str(title.text).is_equal("Fleet 0 / 20")

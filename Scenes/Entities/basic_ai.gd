@@ -9,6 +9,13 @@ const VehicleControlMath = preload("res://Scripts/Driving/vehicle_control.gd")
 @export var maximum_lookahead: float = 24.0
 @export var lookahead_time: float = 0.65
 @export var curvature_horizon: float = 200.0
+@export var target_lateral_offset: float = 0.0
+@export var target_longitudinal_offset: float = 0.0
+
+@export_group("Heading Recovery")
+@export_range(0.0, 180.0, 1.0) var heading_recovery_enter_degrees: float = 80.0
+@export_range(0.0, 180.0, 1.0) var heading_recovery_exit_degrees: float = 65.0
+@export var heading_recovery_target_speed: float = 8.0
 
 @export_group("Speed Planning")
 @export var maximum_speed: float = 80.0
@@ -30,6 +37,7 @@ var _path_distance: float = 0.0
 var _path_index: int = 0
 var _speed_integral: float = 0.0
 var _previous_speed_error: float = 0.0
+var _heading_recovery_active: bool = false
 
 
 func _ready() -> void:
@@ -62,12 +70,21 @@ func get_control(delta: float) -> Dictionary:
 		minimum_lookahead,
 		maximum_lookahead
 	)
-	var target: Dictionary = path.sample_at_distance(_path_distance + lookahead)
+	var target_distance := maxf(
+		_path_distance + lookahead + target_longitudinal_offset,
+		_path_distance
+	)
+	var target: Dictionary = path.sample_at_distance(target_distance)
 	if not target["valid"]:
 		_reset_speed_controller()
 		return neutral
 
-	var local_target := vehicle.to_local(target["position"])
+	var target_position: Vector3 = VehicleControlMath.offset_path_target(
+		target["position"],
+		target["tangent"],
+		target_lateral_offset
+	)
+	var local_target := vehicle.to_local(target_position)
 	var steering := VehicleControlMath.pure_pursuit_steering(
 		local_target,
 		wheel_base,
@@ -81,6 +98,21 @@ func get_control(delta: float) -> Dictionary:
 		maximum_lateral_acceleration
 	)
 	var target_speed := _calculate_target_speed(path)
+	var recovery := VehicleControlMath.heading_recovery_control(
+		local_target,
+		_heading_recovery_active,
+		deg_to_rad(heading_recovery_enter_degrees),
+		deg_to_rad(heading_recovery_exit_degrees),
+		target_speed,
+		heading_recovery_target_speed
+	)
+	var next_recovery_active: bool = recovery["active"]
+	if next_recovery_active != _heading_recovery_active:
+		_reset_speed_controller()
+	_heading_recovery_active = next_recovery_active
+	if _heading_recovery_active:
+		steering = recovery["steering"]
+		target_speed = recovery["target_speed"]
 	var speed_error := target_speed - travel_speed
 	_update_speed_integral(speed_error, delta)
 	var longitudinal := VehicleControlMath.split_speed_control(

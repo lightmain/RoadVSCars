@@ -32,6 +32,146 @@ func test_pure_pursuit_is_neutral_for_ahead_target() -> void:
 	assert_float(command).is_equal_approx(0.0, 0.0001)
 
 
+func test_heading_recovery_stays_inactive_below_entry_angle() -> void:
+	var angle := deg_to_rad(79.0)
+	var recovery: Dictionary = VehicleControl.heading_recovery_control(
+		Vector3(-sin(angle), 0.0, cos(angle)) * 10.0,
+		false,
+		deg_to_rad(80.0),
+		deg_to_rad(65.0),
+		30.0,
+		8.0
+	)
+
+	assert_bool(recovery["active"]).is_false()
+	assert_float(recovery["target_speed"]).is_equal_approx(30.0, 0.001)
+
+
+func test_heading_recovery_starts_at_entry_angle_with_full_left_lock() -> void:
+	var angle := deg_to_rad(80.0)
+	var recovery: Dictionary = VehicleControl.heading_recovery_control(
+		Vector3(-sin(angle), 0.0, cos(angle)) * 10.0,
+		false,
+		deg_to_rad(80.0),
+		deg_to_rad(65.0),
+		30.0,
+		8.0
+	)
+
+	assert_bool(recovery["active"]).is_true()
+	assert_float(recovery["steering"]).is_equal_approx(1.0, 0.001)
+	assert_float(recovery["target_speed"]).is_equal_approx(8.0, 0.001)
+
+
+func test_heading_recovery_uses_full_right_lock_for_right_target() -> void:
+	var angle := deg_to_rad(100.0)
+	var recovery: Dictionary = VehicleControl.heading_recovery_control(
+		Vector3(sin(angle), 0.0, cos(angle)) * 10.0,
+		false,
+		deg_to_rad(80.0),
+		deg_to_rad(65.0),
+		30.0,
+		8.0
+	)
+
+	assert_bool(recovery["active"]).is_true()
+	assert_float(recovery["steering"]).is_equal_approx(-1.0, 0.001)
+
+
+func test_heading_recovery_uses_exit_angle_hysteresis() -> void:
+	var stays_active_angle := deg_to_rad(70.0)
+	var exits_angle := deg_to_rad(64.0)
+	var stays_active: Dictionary = VehicleControl.heading_recovery_control(
+		Vector3(
+			-sin(stays_active_angle),
+			0.0,
+			cos(stays_active_angle)
+		) * 10.0,
+		true,
+		deg_to_rad(80.0),
+		deg_to_rad(65.0),
+		30.0,
+		8.0
+	)
+	var exits: Dictionary = VehicleControl.heading_recovery_control(
+		Vector3(-sin(exits_angle), 0.0, cos(exits_angle)) * 10.0,
+		true,
+		deg_to_rad(80.0),
+		deg_to_rad(65.0),
+		30.0,
+		8.0
+	)
+
+	assert_bool(stays_active["active"]).is_true()
+	assert_bool(exits["active"]).is_false()
+
+
+func test_heading_recovery_chooses_left_lock_for_directly_rearward_target() -> void:
+	var recovery: Dictionary = VehicleControl.heading_recovery_control(
+		Vector3(0.0, 0.0, -10.0),
+		false,
+		deg_to_rad(80.0),
+		deg_to_rad(65.0),
+		30.0,
+		8.0
+	)
+
+	assert_bool(recovery["active"]).is_true()
+	assert_float(recovery["steering"]).is_equal_approx(1.0, 0.001)
+
+
+func test_heading_recovery_is_finite_and_inactive_for_invalid_target() -> void:
+	var recovery: Dictionary = VehicleControl.heading_recovery_control(
+		Vector3(NAN, 0.0, INF),
+		true,
+		deg_to_rad(80.0),
+		deg_to_rad(65.0),
+		30.0,
+		8.0
+	)
+
+	assert_bool(recovery["active"]).is_false()
+	assert_float(recovery["steering"]).is_equal_approx(0.0, 0.001)
+	assert_bool(is_finite(recovery["target_speed"])).is_true()
+
+
+func test_path_target_offset_uses_road_right_for_positive_z() -> void:
+	var target: Vector3 = VehicleControl.offset_path_target(
+		Vector3(10.0, 2.0, 20.0),
+		Vector3.BACK,
+		3.0
+	)
+
+	assert_vector(target).is_equal_approx(
+		Vector3(13.0, 2.0, 20.0),
+		Vector3.ONE * 0.001
+	)
+
+
+func test_path_target_offset_rotates_with_the_road_tangent() -> void:
+	var target: Vector3 = VehicleControl.offset_path_target(
+		Vector3(10.0, 2.0, 20.0),
+		Vector3.RIGHT,
+		3.0
+	)
+
+	assert_vector(target).is_equal_approx(
+		Vector3(10.0, 2.0, 17.0),
+		Vector3.ONE * 0.001
+	)
+
+
+func test_path_target_offset_ignores_a_vertical_tangent() -> void:
+	var position := Vector3(10.0, 2.0, 20.0)
+	var target: Vector3 = VehicleControl.offset_path_target(
+		position,
+		Vector3.UP,
+		3.0
+	)
+
+	assert_vector(target).is_equal_approx(position, Vector3.ONE * 0.001)
+
+
 func test_steering_is_limited_by_lateral_acceleration_at_speed() -> void:
 	var command: float = VehicleControl.limit_steering_for_speed(
 		1.0,

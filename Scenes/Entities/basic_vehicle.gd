@@ -2,6 +2,14 @@ extends VehicleBody3D
 
 class_name BasicVehicle
 
+signal telemetry_updated(
+	speed: float,
+	camera_speed: float,
+	steering_command: float,
+	throttle_command: float,
+	brake_command: float
+)
+
 const VehicleControlMath = preload("res://Scripts/Driving/vehicle_control.gd")
 const GRAVITY_ACCELERATION: float = 9.80665
 const CAMERA_ROAD: StringName = &"road"
@@ -62,9 +70,6 @@ var _off_road_elapsed: float = 0.0
 var _off_road_path_index: int = 0
 
 func _ready() -> void:
-	$UI.visible = interface_enabled
-	if interface_enabled:
-		$UI.camera_selected.connect(select_camera)
 	lookat = global_position
 	_deceleration_samples.append({
 		"time": _telemetry_time,
@@ -278,11 +283,9 @@ func _basic_driving(
 	
 	# Set UI
 	if interface_enabled:
-		$UI.set_speed_monitor(
+		telemetry_updated.emit(
 			linear_velocity.length() * 3.6,
-			dynamic_road.camera.backward_speed * 3.6
-		)
-		$UI.set_control_monitor(
+			dynamic_road.camera.backward_speed * 3.6,
 			-steering / maxf(MAX_STEER, 0.0001),
 			throttle_command,
 			brake_command
@@ -344,8 +347,10 @@ func select_camera(camera_mode: StringName) -> void:
 			_update_observer_camera()
 			observer_camera.make_current()
 
-	if interface_enabled:
-		$UI.set_camera_mode(_camera_mode)
+
+func release_camera() -> void:
+	_camera_mode = &""
+	_disable_vehicle_cameras()
 
 
 func _disable_vehicle_cameras() -> void:
@@ -379,6 +384,14 @@ func configure_variant(variant: Dictionary) -> void:
 	variant_ai.lookahead_time = variant["lookahead_time"]
 	variant_ai.speed_kp = variant["speed_kp"]
 	variant_ai.brake_gain = variant["brake_gain"]
+	variant_ai.target_lateral_offset = variant.get(
+		"target_lateral_offset",
+		0.0
+	)
+	variant_ai.target_longitudinal_offset = variant.get(
+		"target_longitudinal_offset",
+		0.0
+	)
 
 
 func _apply_body_color(mesh_instance: MeshInstance3D, color: Color) -> void:

@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://cig0lyywuaagt" path="res://Scenes/Entities/BasicVehicle.tscn" id="2_u8q20"]
 [ext_resource type="Script" uid="uid://drb0xmjeql3h3" path="res://Scenes/Levels/camera_3d.gd" id="3_yjxcc"]
 [ext_resource type="Script" uid="uid://dbo23qopubbk4" path="res://Scenes/Levels/vehicle_fleet.gd" id="4_fleet"]
+[ext_resource type="PackedScene" uid="uid://bjfhsju4wplt6" path="res://Scenes/Temp/ui.tscn" id="5_ui"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_eth5y"]
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
@@ -23,10 +24,10 @@ glow_enabled = true
 friction = 0.6
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_f1n8c"]
-size = Vector3(40, 1, 50)
+size = Vector3(40, 1, 120)
 
 [sub_resource type="BoxMesh" id="BoxMesh_7x7pb"]
-size = Vector3(40, 1, 50)
+size = Vector3(40, 1, 120)
 
 [node name="Level" type="Node3D" unique_id=610386601]
 
@@ -40,6 +41,7 @@ shadow_enabled = true
 [node name="Environment" type="Node3D" parent="." unique_id=1317513103]
 
 [node name="StartingRoad" type="StaticBody3D" parent="Environment" unique_id=35525333]
+position = Vector3(0, 0, -35)
 physics_material_override = SubResource("PhysicsMaterial_tyfcb")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Environment/StartingRoad" unique_id=1764403132]
@@ -70,3 +72,6 @@ backward_speed_start = 20.0
 max_pitch_angle = 40.0
 min_pitch_angle = -25.0
 max_yaw_angle = 180.0
+
+[node name="UI" parent="." unique_id=2142935007 node_paths=PackedStringArray("vehicle_fleet") instance=ExtResource("5_ui")]
+vehicle_fleet = NodePath("../Entities")

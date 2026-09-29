@@ -21,6 +21,70 @@ static func pure_pursuit_steering(
 	return clampf(steer_angle / max_steer_angle, -1.0, 1.0)
 
 
+static func heading_recovery_control(
+	local_target: Vector3,
+	was_active: bool,
+	enter_angle: float,
+	exit_angle: float,
+	planned_target_speed: float,
+	recovery_target_speed: float
+) -> Dictionary:
+	var safe_planned_speed := (
+		maxf(planned_target_speed, 0.0)
+		if is_finite(planned_target_speed)
+		else 0.0
+	)
+	var horizontal_target := Vector2(local_target.x, local_target.z)
+	if (
+		not is_finite(horizontal_target.x)
+		or not is_finite(horizontal_target.y)
+		or horizontal_target.length_squared() <= MIN_DISTANCE
+	):
+		return {
+			"active": false,
+			"steering": 0.0,
+			"target_speed": safe_planned_speed,
+		}
+
+	var safe_enter_angle := clampf(absf(enter_angle), 0.0, PI)
+	var safe_exit_angle := clampf(absf(exit_angle), 0.0, safe_enter_angle)
+	var heading_error := atan2(-horizontal_target.x, horizontal_target.y)
+	var heading_magnitude := absf(heading_error)
+	var threshold := safe_exit_angle if was_active else safe_enter_angle
+	var is_active := heading_magnitude + MIN_DISTANCE >= threshold
+	if not is_active:
+		return {
+			"active": false,
+			"steering": 0.0,
+			"target_speed": safe_planned_speed,
+		}
+
+	var steering := signf(heading_error)
+	if absf(horizontal_target.x) <= MIN_DISTANCE and horizontal_target.y < 0.0:
+		steering = 1.0
+	var safe_recovery_speed := (
+		maxf(recovery_target_speed, 0.0)
+		if is_finite(recovery_target_speed)
+		else 0.0
+	)
+	return {
+		"active": true,
+		"steering": steering,
+		"target_speed": minf(safe_planned_speed, safe_recovery_speed),
+	}
+
+
+static func offset_path_target(
+	position: Vector3,
+	tangent: Vector3,
+	lateral_offset: float
+) -> Vector3:
+	var road_right := Vector3.UP.cross(tangent)
+	if road_right.length_squared() <= MIN_DISTANCE:
+		return position
+	return position + road_right.normalized() * lateral_offset
+
+
 static func limit_steering_for_speed(
 	steering_command: float,
 	speed: float,
