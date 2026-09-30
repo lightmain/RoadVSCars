@@ -109,3 +109,4 @@ top_level = true
 
 [node name="BasicAI" type="Node" parent="." unique_id=965259551]
 script = ExtResource("4_tpm3g")
+path_end_margin = 5.0

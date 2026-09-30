@@ -211,7 +211,7 @@ static func build_variants(
 				GRID_FRONT_Z - index * GRID_LONGITUDINAL_SPACING
 			),
 			"color": Color.from_hsv(hue, 0.72, 0.9),
-			"suspension_stiffness": 70.0 + profile * 15.0,
+			"suspension_stiffness": 170.0 + profile * 15.0,
 			"suspension_travel": 0.32 + secondary_profile * 0.06,
 			"damping_compression": 0.65 + profile * 0.08,
 			"damping_relaxation": 0.75 + secondary_profile * 0.1,

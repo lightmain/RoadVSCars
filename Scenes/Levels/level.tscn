@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://drb0xmjeql3h3" path="res://Scenes/Levels/camera_3d.gd" id="3_yjxcc"]
 [ext_resource type="Script" uid="uid://dbo23qopubbk4" path="res://Scenes/Levels/vehicle_fleet.gd" id="4_fleet"]
 [ext_resource type="PackedScene" uid="uid://bjfhsju4wplt6" path="res://Scenes/Temp/ui.tscn" id="5_ui"]
-[ext_resource type="Material" path="res://Scenes/Levels/starting_road_material.tres" id="6_starting_road"]
+[ext_resource type="Material" uid="uid://c4iqox0dve4xt" path="res://Scenes/Levels/starting_road_material.tres" id="6_starting_road"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_eth5y"]
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
@@ -25,10 +25,10 @@ glow_enabled = true
 friction = 0.6
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_f1n8c"]
-size = Vector3(40, 1, 120)
+size = Vector3(50, 1, 120)
 
 [sub_resource type="BoxMesh" id="BoxMesh_7x7pb"]
-size = Vector3(40, 1, 120)
+size = Vector3(50, 1, 120)
 
 [node name="Level" type="Node3D" unique_id=610386601]
 
@@ -42,7 +42,7 @@ shadow_enabled = true
 [node name="Environment" type="Node3D" parent="." unique_id=1317513103]
 
 [node name="StartingRoad" type="StaticBody3D" parent="Environment" unique_id=35525333]
-position = Vector3(0, 0, -35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -35)
 physics_material_override = SubResource("PhysicsMaterial_tyfcb")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Environment/StartingRoad" unique_id=1764403132]
@@ -55,10 +55,11 @@ material_override = ExtResource("6_starting_road")
 mesh = SubResource("BoxMesh_7x7pb")
 
 [node name="DynamicRoad" type="Node3D" parent="Environment" unique_id=282903026 node_paths=PackedStringArray("camera")]
+transform = Transform3D(0.9899701, -0.14090094, 0.010304945, 0.1393587, 0.9619449, -0.23503467, 0.023203796, 0.23411337, 0.9719324, 0, 0, 0)
 script = ExtResource("1_7x7pb")
 camera = NodePath("../../Camera3D")
 road_material = ExtResource("2_lkqqh")
-road_width = 40.0
+road_width = 50.0
 
 [node name="Entities" type="Node3D" parent="." unique_id=1240558796 node_paths=PackedStringArray("dynamic_road")]
 script = ExtResource("4_fleet")
@@ -71,6 +72,8 @@ fov = 65.5775
 script = ExtResource("3_yjxcc")
 dynamic_road = NodePath("../Environment/DynamicRoad")
 backward_speed_start = 20.0
+backward_acceleration = 0.2
+temporary_slow_deceleration = 10.0
 max_pitch_angle = 40.0
 min_pitch_angle = -25.0
 max_yaw_angle = 180.0

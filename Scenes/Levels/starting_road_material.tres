@@ -1,11 +1,12 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://c4iqox0dve4xt"]
 
-[ext_resource type="Shader" path="res://Scenes/Levels/road_surface.gdshader" id="1_surface"]
+[ext_resource type="Shader" uid="uid://wvp52q1v1dwt" path="res://Scenes/Levels/road_surface.gdshader" id="1_surface"]
 
 [resource]
+render_priority = 0
 shader = ExtResource("1_surface")
 shader_parameter/use_world_coordinates = true
-shader_parameter/road_width = 40.0
+shader_parameter/road_width = 50.0
 shader_parameter/starting_road_join_z = 25.0
 shader_parameter/grass_width = 5.0
 shader_parameter/shoulder_width = 1.5
